@@ -31,7 +31,7 @@ class KittenClient(GymClient, ABC):
         self._evaluator = kitten.logging.KittenEvaluator(
             env=self._env, device=self._device, **self._cfg.get("evaluation", {})
         )
-        self._np_rand = kitten.util.global_seed(seed, self._env, self._evaluator)
+        self._rng = kitten.common.global_seed(seed)
 
         # RL Modules
         self._step = 0
@@ -48,7 +48,7 @@ class KittenClient(GymClient, ABC):
         self.early_start()
 
     def epoch(self, config: Config) -> Tuple[int, Dict[str, Scalar]]:
-        torch.manual_seed(self._np_rand.integers(0, 65536))
+        torch.manual_seed(self._rng.numpy.integers(0, 65535))
         repeats = config.get("evaluation_repeats", self._evaluator.repeats)
         reward = self._evaluator.evaluate(self.policy, repeats)
         # TODO: What is loss under this framework? API shouldn't enforce returning this

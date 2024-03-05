@@ -6,6 +6,7 @@ import torch
 from flwr.common import Config
 import kitten
 from kitten.rl.dqn import DQN
+from kitten.common.util import build_env, build_critic
 
 from florl.common import NumPyKnowledge
 from florl.common.util import get_torch_parameters, set_torch_parameters
@@ -52,7 +53,7 @@ class DQNClient(KittenClient):
         self._policy = kitten.policy.EpsilonGreedyPolicy(
             fn=self.algorithm.policy_fn,
             action_space=self._env.action_space,
-            rng=self._np_rand,
+            rng=self._rng.numpy,
             device=self._device
         )
         # Synchronisation
@@ -69,8 +70,6 @@ class DQNClient(KittenClient):
         self._collector.early_start(n=self._cfg["train"]["initial_collection_size"])
 
     def train(self, train_config: Config):
-        # Hack
-        torch.manual_seed(self._np_rand.integers(0, 65536))
         metrics = {}
         # Synchronise critic net
         critic_loss = []
@@ -90,8 +89,8 @@ class DQNClient(KittenClient):
 
 class DQNClientFactory:
     def __init__(self, config: Config, device: str = "cpu") -> None:
-        self.env = kitten.util.build_env(**config["rl"]["env"])
-        self.net = kitten.util.build_critic(
+        self.env = build_env(**config["rl"]["env"])
+        self.net = build_critic(
             env=self.env,
             **config
                 .get("rl",{})
@@ -99,7 +98,7 @@ class DQNClientFactory:
                 .get("critic", {})
         )
         self.device = device
-        
+
     def create_dqn_client(self, cid: int, config: Config) -> DQNClient:
         env = copy.deepcopy(self.env)
         net = copy.deepcopy(self.net)
