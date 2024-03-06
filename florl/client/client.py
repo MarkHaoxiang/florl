@@ -14,7 +14,7 @@ from flwr.common.typing import (
     FitRes,
     EvaluateIns,
     EvaluateRes,
-    Scalar
+    Scalar,
 )
 
 from florl.common.knowledge import Knowledge
@@ -33,19 +33,21 @@ class FlorlClient(fl.client.Client, ABC):
         self._knowl.set_parameters(ins.parameters)
         try:
             n, metrics = self.train(ins.config)
-            parameters_res = self.get_parameters(GetParametersIns(ins.config.get("get_parameters", {})))
+            parameters_res = self.get_parameters(
+                GetParametersIns(ins.config.get("get_parameters", {}))
+            )
             return FitRes(
                 status=Status(Code.OK, ""),
                 num_examples=n,
                 parameters=parameters_res.parameters,
-                metrics=metrics
+                metrics=metrics,
             )
         except NotImplementedError:
             return FitRes(
                 status=Status(Code.FIT_NOT_IMPLEMENTED, "Train is not implemented"),
                 num_examples=0,
                 parameters=Parameters(tensor_type="", tensors=[]),
-                metrics={}
+                metrics={},
             )
 
     def evaluate(self, ins: EvaluateIns) -> EvaluateRes:
@@ -53,10 +55,7 @@ class FlorlClient(fl.client.Client, ABC):
         try:
             n, metrics = self.epoch(ins.config)
             return EvaluateRes(
-                status=Status(Code.OK, ""),
-                loss=0.0,
-                num_examples=n,
-                metrics=metrics
+                status=Status(Code.OK, ""), loss=0.0, num_examples=n, metrics=metrics
             )
         except NotImplementedError:
             return EvaluateRes(
@@ -88,6 +87,7 @@ class FlorlClient(fl.client.Client, ABC):
             config (Config): Evaluation configuration
         """
         raise NotImplementedError
+
 
 class GymClient(FlorlClient, ABC):
     """An RL client training within a gym environment"""

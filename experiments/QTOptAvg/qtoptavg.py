@@ -12,12 +12,13 @@ from florl.common import NumPyKnowledge
 from florl.common.util import get_torch_parameters, set_torch_parameters
 from florl.client.kitten import KittenClient
 
+
 class QTOptKnowledge(NumPyKnowledge):
     def __init__(self, critic_1: torch.nn.Module, critic_2: torch.nn.Module) -> None:
         super().__init__(["critic_1", "critic_target_1", "critic_2", "critic_target_2"])
         self.critic_1 = kitten.nn.AddTargetNetwork(copy.deepcopy(critic_1))
         self.critic_2 = kitten.nn.AddTargetNetwork(copy.deepcopy(critic_2))
-    
+
     def _get_module_parameters_numpy(self, id_: str, ins: GetParametersIns):
         if id_ == "critic_1":
             return get_torch_parameters(self.critic_1.net)
@@ -42,13 +43,16 @@ class QTOptKnowledge(NumPyKnowledge):
         else:
             raise ValueError(f"Unknown id {id_}")
 
+
 class QTOptClient(KittenClient):
-    def __init__(self,
-                 knowledge: QTOptKnowledge,
-                 env: gym.Env,
-                 config: Config,
-                 seed: int | None = None,
-                 device: str = "cpu"):
+    def __init__(
+        self,
+        knowledge: QTOptKnowledge,
+        env: gym.Env,
+        config: Config,
+        seed: int | None = None,
+        device: str = "cpu",
+    ):
         super().__init__(knowledge, env, config, seed, True, device)
 
     # Algorithm
@@ -59,13 +63,13 @@ class QTOptClient(KittenClient):
             critic_2_network=self._knowl.critic_2.net,
             obs_space=self._env.observation_space,
             action_space=self._env.action_space,
-            **self._cfg.get("algorithm", {})
+            **self._cfg.get("algorithm", {}),
         )
         self._policy = kitten.policy.EpsilonGreedyPolicy(
             fn=self.algorithm.policy_fn,
             action_space=self._env.action_space,
             rng=self._rng.numpy,
-            device=self._device
+            device=self._device,
         )
         # Synchronisation
         self._algorithm._critic_1 = self._knowl.critic_1
@@ -74,6 +78,7 @@ class QTOptClient(KittenClient):
     @property
     def algorithm(self) -> kitten.rl.Algorithm:
         return self._algorithm
+
     @property
     def policy(self) -> kitten.policy.Policy:
         return self._policy
@@ -100,22 +105,15 @@ class QTOptClient(KittenClient):
         metrics["loss"] = sum(critic_loss) / len(critic_loss)
         return len(self._memory), metrics
 
+
 class QTOptClientFactory:
     def __init__(self, config: Config, device: str = "cpu") -> None:
         self.env = build_env(**config["rl"]["env"])
         self.net_1 = build_critic(
-            env=self.env,
-            **config
-                .get("rl",{})
-                .get("algorithm", {})
-                .get("critic", {})
+            env=self.env, **config.get("rl", {}).get("algorithm", {}).get("critic", {})
         )
         self.net_2 = build_critic(
-            env=self.env,
-            **config
-                .get("rl",{})
-                .get("algorithm", {})
-                .get("critic", {})
+            env=self.env, **config.get("rl", {}).get("algorithm", {}).get("critic", {})
         )
         self.device = device
 
@@ -126,10 +124,6 @@ class QTOptClientFactory:
 
         knowledge = QTOptKnowledge(net_1, net_2)
         client = QTOptClient(
-            knowledge=knowledge,
-            env=env,
-            config=config,
-            seed=cid,
-            device=self.device
+            knowledge=knowledge, env=env, config=config, seed=cid, device=self.device
         )
         return client

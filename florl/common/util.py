@@ -3,22 +3,22 @@ import pickle
 from typing import Callable, List, Tuple, OrderedDict
 from collections import defaultdict
 import numbers
-from flwr.common import EvaluateIns, EvaluateRes, FitIns, FitRes
+from flwr.common import EvaluateIns, EvaluateRes, FitIns, FitRes, NDArrays
+from flwr.client import Client
 
 import numpy as np
 import torch
-import flwr as fl
-from flwr.client import Client
+
 
 class StatefulClient(Client):
-    """ A wrapper to enabled pickled client states on disk as an alternative to Context for stateful execution
+    """A wrapper to enabled pickled client states on disk as an alternative to Context for stateful execution
 
     # TODO: Add encryption to ensure security. But really this entire thing is a hack, how to save complex state is worth discussing.
     """
-    def __init__(self,
-                 cid: str,
-                 client_fn: Callable[[str], Client],
-                 ws: str = "florl_ws"):
+
+    def __init__(
+        self, cid: str, client_fn: Callable[[str], Client], ws: str = "florl_ws"
+    ):
         cid = str(cid)
 
         # Create ws if not exists
@@ -32,13 +32,13 @@ class StatefulClient(Client):
             self.save_client()
         else:
             self.load_client()
-    
+
     def save_client(self):
         pickle.dump(self._client, open(self._client_path, "wb"))
 
     def load_client(self):
         self._client = pickle.load(open(self._client_path, "rb"))
-    
+
     def fit(self, ins: FitIns) -> FitRes:
         result = self._client.fit(ins)
         self.save_client()
@@ -47,8 +47,11 @@ class StatefulClient(Client):
     def evaluate(self, ins: EvaluateIns) -> EvaluateRes:
         return self._client.evaluate(ins)
 
-def stateful_client(client_fn: Callable[[str], Client], ws: str = "florl_ws") -> Callable[[str], Client]:
-    """ Wraps a client constructor to a StatefulClient constructor
+
+def stateful_client(
+    client_fn: Callable[[str], Client], ws: str = "florl_ws"
+) -> Callable[[str], Client]:
+    """Wraps a client constructor to a StatefulClient constructor
 
     Args:
         client_fn (Callable[[str], Client]): Builds a client from cid.
@@ -57,17 +60,14 @@ def stateful_client(client_fn: Callable[[str], Client], ws: str = "florl_ws") ->
     Returns:
         Callable[[str], Client]: Builds a stateful client from cid.
     """
-    return lambda cid: StatefulClient(
-        cid=cid,
-        client_fn=client_fn,
-        ws=ws
-    )
+    return lambda cid: StatefulClient(cid=cid, client_fn=client_fn, ws=ws)
+
 
 # ==========
 # Functions from https://flower.ai/docs/framework/tutorial-series-get-started-with-flower-pytorch.html and the labs
 
 
-def set_torch_parameters(net: torch.nn.Module, parameters: List[np.ndarray]):
+def set_torch_parameters(net: torch.nn.Module, parameters: NDArrays):
     params_dict = zip(net.state_dict().keys(), parameters)
     state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
     net.load_state_dict(state_dict, strict=True)

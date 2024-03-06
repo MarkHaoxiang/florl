@@ -16,31 +16,25 @@ class DQNKnowledge(NumPyKnowledge):
     def __init__(self, critic: torch.nn.Module) -> None:
         super().__init__(["critic", "critic_target"])
         self.critic = kitten.nn.AddTargetNetwork(copy.deepcopy(critic))
-    
-    def _get_module_parameters_numpy(self, id_: str, ins: GetParametersIns):
-        if id_ == "critic":
-            return get_torch_parameters(self.critic.net)
-        elif id_ == "critic_target":
-            return get_torch_parameters(self.critic.target)
-        else:
-            raise ValueError(f"Unknown id {id_}")
 
-    def _set_module_parameters_numpy(self, id_: str, ins: Parameters):
-        if id_ == "critic":
-            set_torch_parameters(self.critic.net, ins)
-        elif id_ == "critic_target":
-            set_torch_parameters(self.critic.target, ins)
-        else:
-            raise ValueError(f"Unknown id {id_}")
+    @property
+    def torch_modules_registry(self):
+        return {
+            "critic": self.critic.net,
+            "critic_target": self.critic.target
+        }
 
 class DQNClient(KittenClient):
-    def __init__(self,
-                 knowledge: DQNKnowledge,
-                 env: gym.Env,
-                 config: Config,
-                 seed: int | None = None,
-                 device: str = "cpu"):
+    def __init__(
+        self,
+        knowledge: DQNKnowledge,
+        env: gym.Env,
+        config: Config,
+        seed: int | None = None,
+        device: str = "cpu",
+    ):
         super().__init__(knowledge, env, config, seed, True, device)
+        self._knowl: DQNKnowledge = self._knowl # Typing hints
 
     # Algorithm
     def build_algorithm(self) -> None:
@@ -48,19 +42,21 @@ class DQNClient(KittenClient):
         self._algorithm = DQN(
             critic=self._knowl.critic.net,
             device=self._device,
-            **self._cfg.get("algorithm", {})
+            **self._cfg.get("algorithm", {}),
         )
         self._policy = kitten.policy.EpsilonGreedyPolicy(
             fn=self.algorithm.policy_fn,
             action_space=self._env.action_space,
             rng=self._rng.numpy,
-            device=self._device
+            device=self._device,
         )
         # Synchronisation
         self._algorithm._critic = self._knowl.critic
+
     @property
     def algorithm(self) -> kitten.rl.Algorithm:
         return self._algorithm
+
     @property
     def policy(self) -> kitten.policy.Policy:
         return self._policy
@@ -87,15 +83,12 @@ class DQNClient(KittenClient):
         metrics["loss"] = sum(critic_loss) / len(critic_loss)
         return len(self._memory), metrics
 
+
 class DQNClientFactory:
     def __init__(self, config: Config, device: str = "cpu") -> None:
         self.env = build_env(**config["rl"]["env"])
         self.net = build_critic(
-            env=self.env,
-            **config
-                .get("rl",{})
-                .get("algorithm", {})
-                .get("critic", {})
+            env=self.env, **config.get("rl", {}).get("algorithm", {}).get("critic", {})
         )
         self.device = device
 
@@ -105,10 +98,6 @@ class DQNClientFactory:
 
         knowledge = DQNKnowledge(net)
         client = DQNClient(
-            knowledge=knowledge,
-            env=env,
-            config=config,
-            seed=cid,
-            device=self.device
+            knowledge=knowledge, env=env, config=config, seed=cid, device=self.device
         )
         return client
