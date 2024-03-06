@@ -1,9 +1,9 @@
 import copy
-from flwr.common.typing import GetParametersIns, Parameters
 
 import gymnasium as gym
 import torch
 from flwr.common import Config
+from flwr.common.typing import GetParametersIns, Parameters
 import kitten
 from kitten.rl.dqn import DQN
 from kitten.common.util import build_env, build_critic
