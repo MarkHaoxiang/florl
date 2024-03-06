@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import struct
 from typing import Dict, List
 
 from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays
@@ -24,8 +23,6 @@ class KnowledgeShard:
 
     # TODO: Should correspond to gRPC directly instead of serialisation hack
     # TODO: Should name also be serialised into parameter?
-
-    id_: int
     name: str
     parameters: Parameters | None
 
@@ -38,29 +35,25 @@ class KnowledgeShard:
         # Validation
         if self.parameters is None:
             raise ValueError("Parameters is none.")
-        if self.id_ < 0 or self.id_ > 65535:
-            raise ValueError(f"id {self.id_} cannot be serialised to 2 bytes")
         if "." in self.name:
             raise ValueError("Do not include char . in name")
 
         # Serialisation
-        packed_id = struct.pack(">I", self.id_)
         return Parameters(
-            tensors=[packed_id + tensor for tensor in self.parameters.tensors],
-            tensor_type=f"{self.name}.{self.parameters.tensor_type}",
+            tensors=self.parameters.tensors,
+            tensor_type=f"{self.name}.{len(self.parameters.tensors)}.{self.parameters.tensor_type}",
         )
 
     @staticmethod
     def unpack(parameters: Parameters) -> KnowledgeShard:
-        name, tensor_type = parameters.tensor_type.split(".", maxsplit=1)
-        id_ = struct.unpack(">I", parameters.tensors[0][:4])[0]
-        tensors = list(map(lambda x: x[4:], parameters.tensors))
+        name, length, tensor_type = parameters.tensor_type.split(".", maxsplit=2)
+        tensors = parameters.tensors
+        if int(length) != len(tensors):
+            raise ValueError(f"Inconsistency in tensors length for {name} with lengths {length} and {len(tensors)}")
         return KnowledgeShard(
-            id_=id_,
             name=name,
             parameters=Parameters(tensors=tensors, tensor_type=tensor_type),
         )
-
 
 class Knowledge(ABC):
     """Represents abstract information used in an algorithm"""
@@ -76,8 +69,8 @@ class Knowledge(ABC):
         """
         super().__init__()
         self._shards_registry = {
-            name: KnowledgeShard(id_=i, name=name, parameters=None)
-            for i, name in enumerate(shards)
+            name: KnowledgeShard(name=name, parameters=None)
+            for name in shards
         }
 
     def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
@@ -126,34 +119,16 @@ class Knowledge(ABC):
             ValueError: Inconsistent parameter mapping
         """
         # Deserialisation
-        i = 0
         tensor_types = ins.tensor_type.split(Knowledge.SEP_CHAR)
-        tensor_buffer = []
-        previous_id = None
+        remaining = ins.tensors
 
-        def process_set_buffer(i: int, tensor_buffer: List[bytes]) -> None:
-            shard = KnowledgeShard.unpack(parameters=Parameters(
-                tensors=tensor_buffer,
-                tensor_type=tensor_types[i]
-            ))
-            if self._shards_registry[shard.name].id_ != shard.id_:
-                raise ValueError(f"Inconsistent ID name mapping for {shard.name}")
+        for tensor_type in tensor_types:
+            _, length, _ = tensor_type.split(".", maxsplit=2)
+            length = int(length)
+            tensors, remaining = remaining[:length], remaining[length:]
+            shard = KnowledgeShard.unpack(parameters=Parameters(tensors=tensors, tensor_type=tensor_type))
             self._shards_registry[shard.name] = shard
-            return shard
-
-        for id_tensor in ins.tensors:
-            id_ = struct.unpack(">I", id_tensor[:4])[0]
-            if previous_id is None or previous_id == id_:
-                tensor_buffer.append(id_tensor)
-            else:
-                # Set and callback
-                self._set_shard_callback(process_set_buffer(i, tensor_buffer))
-                # Reset state
-                i, tensor_buffer = i + 1, [id_tensor]
-            previous_id = id_
-
-        if len(tensor_buffer) > 0:
-            self._set_shard_callback(process_set_buffer(i, tensor_buffer))
+            self._set_shard_callback(shard)
 
     def get_shard_parameters(self, shard: KnowledgeShard) -> GetParametersRes:
         """ Fetches parameters from a shard

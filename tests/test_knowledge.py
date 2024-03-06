@@ -27,7 +27,7 @@ class TestKnowledge:
         # Build shard
         test_parameters = rng.random(size=(2,3,))
         shard = KnowledgeShard(
-            id_=0, name="test_shard", parameters=ndarrays_to_parameters(test_parameters)
+            name="test_shard", parameters=ndarrays_to_parameters(test_parameters)
         )
         # Pack
         serialised = shard.pack()
@@ -41,7 +41,7 @@ class TestKnowledge:
         knowl_1 = InjectionTestKnowledge(default_value=np.array([1]), shards=[str(i) for i in range(3)])
         parameters_res = knowl_1.get_parameters(GetParametersIns({}))
         assert parameters_res.parameters.tensor_type == \
-            "0.numpy.ndarray|1.numpy.ndarray|2.numpy.ndarray"
+            "0.1.numpy.ndarray|1.1.numpy.ndarray|2.1.numpy.ndarray"
         
         knowl_2 = InjectionTestKnowledge(default_value=np.array([2]), shards=[str(i) for i in range(5)])
         knowl_2.set_parameters(parameters_res.parameters)
