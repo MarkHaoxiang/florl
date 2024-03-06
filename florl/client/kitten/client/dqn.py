@@ -1,19 +1,17 @@
 import copy
 
 import gymnasium as gym
-import torch
 from flwr.common import Config
-from flwr.common.typing import GetParametersIns, Parameters
 import kitten
 from kitten.rl.dqn import DQN
 from kitten.common.util import build_env, build_critic
 
+from florl.client import FlorlFactory
 from florl.common import NumPyKnowledge
-from florl.common.util import get_torch_parameters, set_torch_parameters
 from florl.client.kitten import KittenClient
 
 class DQNKnowledge(NumPyKnowledge):
-    def __init__(self, critic: torch.nn.Module) -> None:
+    def __init__(self, critic: kitten.nn.Critic) -> None:
         super().__init__(["critic", "critic_target"])
         self.critic = kitten.nn.AddTargetNetwork(copy.deepcopy(critic))
 
@@ -84,7 +82,7 @@ class DQNClient(KittenClient):
         return len(self._memory), metrics
 
 
-class DQNClientFactory:
+class DQNClientFactory(FlorlFactory):
     def __init__(self, config: Config, device: str = "cpu") -> None:
         self.env = build_env(**config["rl"]["env"])
         self.net = build_critic(
@@ -92,7 +90,11 @@ class DQNClientFactory:
         )
         self.device = device
 
-    def create_dqn_client(self, cid: int, config: Config) -> DQNClient:
+    def create_client(self, cid: str, config: Config) -> DQNClient:
+        try:
+            cid = int(cid)
+        except:
+            raise ValueError("cid should be an integer")
         env = copy.deepcopy(self.env)
         net = copy.deepcopy(self.net)
 

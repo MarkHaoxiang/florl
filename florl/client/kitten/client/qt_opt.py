@@ -1,18 +1,18 @@
 import copy
 
 import gymnasium as gym
-import torch
 from flwr.common import Config
 import kitten
 from kitten.rl.qt_opt import QTOpt
 from kitten.common.util import build_env, build_critic
 
+from florl.client import FlorlFactory
 from florl.common import NumPyKnowledge
-from florl.client.kitten import KittenClient
+from .client import KittenClient
 
 
 class QTOptKnowledge(NumPyKnowledge):
-    def __init__(self, critic_1: torch.nn.Module, critic_2: torch.nn.Module) -> None:
+    def __init__(self, critic_1: kitten.nn.Critic, critic_2: kitten.nn.Critic) -> None:
         super().__init__(["critic_1", "critic_target_1", "critic_2", "critic_target_2"])
         self.critic_1 = kitten.nn.AddTargetNetwork(copy.deepcopy(critic_1))
         self.critic_2 = kitten.nn.AddTargetNetwork(copy.deepcopy(critic_2))
@@ -36,6 +36,7 @@ class QTOptClient(KittenClient):
         device: str = "cpu",
     ):
         super().__init__(knowledge, env, config, seed, True, device)
+        self._knowl: QTOptKnowledge = self._knowl # Type hints
 
     # Algorithm
     def build_algorithm(self) -> None:
@@ -88,7 +89,7 @@ class QTOptClient(KittenClient):
         return len(self._memory), metrics
 
 
-class QTOptClientFactory:
+class QTOptClientFactory(FlorlFactory):
     def __init__(self, config: Config, device: str = "cpu") -> None:
         self.env = build_env(**config["rl"]["env"])
         self.net_1 = build_critic(
@@ -99,7 +100,11 @@ class QTOptClientFactory:
         )
         self.device = device
 
-    def create_client(self, cid: int, config: Config) -> QTOptClient:
+    def create_client(self, cid: str, config: Config) -> QTOptClient:
+        try:
+            cid = int(cid)
+        except:
+            raise ValueError("cid should be an integer")
         env = copy.deepcopy(self.env)
         net_1 = copy.deepcopy(self.net_1)
         net_2 = copy.deepcopy(self.net_2)

@@ -10,7 +10,6 @@ import kitten
 from florl.client import GymClient
 from florl.common import Knowledge
 
-
 class KittenClient(GymClient, ABC):
     """A client conducting training and evaluation with the Kitten RL library"""
 
