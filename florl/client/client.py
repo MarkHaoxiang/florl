@@ -30,7 +30,8 @@ class FlorlClient(fl.client.Client, ABC):
         return self._knowl.get_parameters(ins)
 
     def fit(self, ins: FitIns) -> FitRes:
-        self._knowl.set_parameters(ins.parameters)
+        if len(ins.parameters.tensors) > 0:
+            self._knowl.set_parameters(ins.parameters)
         try:
             n, metrics = self.train(ins.config)
             parameters_res = self.get_parameters(

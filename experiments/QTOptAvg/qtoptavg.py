@@ -1,5 +1,4 @@
 import copy
-from flwr.common.typing import GetParametersIns, Parameters
 
 import gymnasium as gym
 import torch
@@ -9,7 +8,6 @@ from kitten.rl.qt_opt import QTOpt
 from kitten.common.util import build_env, build_critic
 
 from florl.common import NumPyKnowledge
-from florl.common.util import get_torch_parameters, set_torch_parameters
 from florl.client.kitten import KittenClient
 
 
@@ -19,30 +17,14 @@ class QTOptKnowledge(NumPyKnowledge):
         self.critic_1 = kitten.nn.AddTargetNetwork(copy.deepcopy(critic_1))
         self.critic_2 = kitten.nn.AddTargetNetwork(copy.deepcopy(critic_2))
 
-    def _get_module_parameters_numpy(self, id_: str, ins: GetParametersIns):
-        if id_ == "critic_1":
-            return get_torch_parameters(self.critic_1.net)
-        elif id_ == "critic_target_1":
-            return get_torch_parameters(self.critic_1.target)
-        elif id_ == "critic_2":
-            return get_torch_parameters(self.critic_2.target)
-        elif id_ == "critic_target_2":
-            return get_torch_parameters(self.critic_2.target)
-        else:
-            raise ValueError(f"Unknown id {id_}")
-
-    def _set_module_parameters_numpy(self, id_: str, ins: Parameters):
-        if id_ == "critic_1":
-            return set_torch_parameters(self.critic_1.net)
-        elif id_ == "critic_target_1":
-            return set_torch_parameters(self.critic_1.target)
-        elif id_ == "critic_2":
-            return set_torch_parameters(self.critic_2.target)
-        elif id_ == "critic_target_2":
-            return set_torch_parameters(self.critic_2.target)
-        else:
-            raise ValueError(f"Unknown id {id_}")
-
+    @property
+    def torch_modules_registry(self):
+        return {
+            "critic_1": self.critic_1.net,
+            "critic_target_1": self.critic_1.target,
+            "critic_2": self.critic_2.net,
+            "critic_target_2": self.critic_2.target,
+        }
 
 class QTOptClient(KittenClient):
     def __init__(
@@ -117,7 +99,7 @@ class QTOptClientFactory:
         )
         self.device = device
 
-    def create_dqn_client(self, cid: int, config: Config) -> QTOptClient:
+    def create_client(self, cid: int, config: Config) -> QTOptClient:
         env = copy.deepcopy(self.env)
         net_1 = copy.deepcopy(self.net_1)
         net_2 = copy.deepcopy(self.net_2)
