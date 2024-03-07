@@ -110,9 +110,10 @@ class Knowledge(ABC):
             ),
             parameters=parameters,
         )
-    
-    def unpack(self, ins: Parameters) -> List[KnowledgeShard]:
-        """ Unpacks parameters into shards
+
+    @staticmethod
+    def unpack(ins: Parameters) -> List[KnowledgeShard]:
+        """Unpacks parameters into shards
 
         Args:
             ins (Parameters): serialised knowledge.
@@ -134,19 +135,24 @@ class Knowledge(ABC):
             contained_shards.append(shard)
         return contained_shards
 
+    def update_knowledge(
+        self, shards: List[KnowledgeShard], shard_filter: List[str] | None = None
+    ) -> None:
+        for shard in shards:
+            if shard_filter is None or shard.name in shard_filter:
+                self._shards_registry[shard.name] = shard
+                self._set_shard_callback(shard)
+
     def set_parameters(self, ins: Parameters, shards: List[str] | None = None) -> None:
-        """ Set the parameters for knowledge
+        """Set the parameters for knowledge
 
         Args:
             ins (Parameters): From Knowledge.get_parameters.
             shards (List[str] | None, optional): List of shards to synchronise. Defaults to all shards.
         """
         # Deserialisation
-        contained_shards = self.unpack(ins)
-        for shard in contained_shards:
-            if shards is None or shard.name in shards:
-                self._shards_registry[shard.name] = shard
-                self._set_shard_callback(shard)
+        contained_shards = Knowledge.unpack(ins)
+        self.update_knowledge(contained_shards, shard_filter=shards)
 
     def get_shard_parameters(self, shard: KnowledgeShard) -> GetParametersRes:
         """Fetches parameters from a shard

@@ -31,7 +31,9 @@ class FlorlClient(fl.client.Client, ABC):
 
     def fit(self, ins: FitIns) -> FitRes:
         if len(ins.parameters.tensors) > 0:
-            self._knowl.set_parameters(ins.parameters, shards=ins.config.get("shards", None))
+            self._knowl.set_parameters(
+                ins.parameters, shards=ins.config.get("shards", None)
+            )
         try:
             n, metrics = self.train(ins.config)
             parameters_res = self.get_parameters(
@@ -52,7 +54,9 @@ class FlorlClient(fl.client.Client, ABC):
             )
 
     def evaluate(self, ins: EvaluateIns) -> EvaluateRes:
-        self._knowl.set_parameters(ins.parameters, shards=ins.config.get("shards", None))
+        self._knowl.set_parameters(
+            ins.parameters, shards=ins.config.get("shards", None)
+        )
         try:
             n, metrics = self.epoch(ins.config)
             return EvaluateRes(

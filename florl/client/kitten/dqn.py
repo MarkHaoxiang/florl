@@ -7,7 +7,7 @@ from kitten.rl.dqn import DQN
 from kitten.common.util import build_env, build_critic
 
 from florl.client import FlorlFactory
-from florl.common import NumPyKnowledge
+from florl.common import Knowledge, NumPyKnowledge
 from florl.client.kitten import KittenClient
 
 
@@ -89,15 +89,18 @@ class DQNClientFactory(FlorlFactory):
         )
         self.device = device
 
+    def create_default_knowledge(self, config: Config) -> Knowledge:
+        net = copy.deepcopy(self.net)
+        knowledge = DQNKnowledge(net)
+        return knowledge
+
     def create_client(self, cid: str, config: Config) -> DQNClient:
         try:
             cid = int(cid)
         except:
             raise ValueError("cid should be an integer")
         env = copy.deepcopy(self.env)
-        net = copy.deepcopy(self.net)
-
-        knowledge = DQNKnowledge(net)
+        knowledge = self.create_default_knowledge(config)
         client = DQNClient(
             knowledge=knowledge, env=env, config=config, seed=cid, device=self.device
         )

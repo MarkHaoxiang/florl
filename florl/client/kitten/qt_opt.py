@@ -1,13 +1,17 @@
 import copy
+from logging import WARNING
+
 
 import gymnasium as gym
 from flwr.common import Config
+from flwr.common.typing import EvaluateIns, EvaluateRes
+from flwr.common.logger import log
 import kitten
 from kitten.rl.qt_opt import QTOpt
 from kitten.common.util import build_env, build_critic
 
 from florl.client import FlorlFactory
-from florl.common import NumPyKnowledge
+from florl.common import Knowledge, NumPyKnowledge
 from .client import KittenClient
 
 
@@ -101,16 +105,20 @@ class QTOptClientFactory(FlorlFactory):
         )
         self.device = device
 
+    def create_default_knowledge(self, config: Config) -> Knowledge:
+        net_1 = copy.deepcopy(self.net_1)
+        net_2 = copy.deepcopy(self.net_2)
+        knowledge = QTOptKnowledge(net_1, net_2)
+        return knowledge
+
     def create_client(self, cid: str, config: Config) -> QTOptClient:
         try:
             cid = int(cid)
         except:
             raise ValueError("cid should be an integer")
         env = copy.deepcopy(self.env)
-        net_1 = copy.deepcopy(self.net_1)
-        net_2 = copy.deepcopy(self.net_2)
 
-        knowledge = QTOptKnowledge(net_1, net_2)
+        knowledge = self.create_default_knowledge(config)
         client = QTOptClient(
             knowledge=knowledge, env=env, config=config, seed=cid, device=self.device
         )

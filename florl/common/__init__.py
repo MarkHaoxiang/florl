@@ -1,1 +1,1 @@
-from .knowledge import Knowledge, NumPyKnowledge
+from .knowledge import Knowledge, NumPyKnowledge, KnowledgeShard

@@ -9,7 +9,6 @@ from flwr.common import (
     FitIns,
     FitRes,
     Parameters,
-    GetParametersIns,
 )
 from flwr.server.client_proxy import ClientProxy
 
@@ -19,10 +18,15 @@ from florl.common import Knowledge
 class FlorlStrategy(Strategy, ABC):
     """A strategy interface specific to reinforcement learning"""
 
-    def __init__(self, knowledge: Knowledge) -> None:
+    def __init__(self, knowledge: Knowledge | None = None) -> None:
         super().__init__()
         self._knowledge = knowledge
-
+    
+    @property
+    def knowledge(self) -> Knowledge:
+        if self._knowledge is None:
+            raise ValueError("Knowledge is undefined")
+        return self._knowledge
 
 class AggregateFitWrapper(Strategy):
     """Hack for adapting classical FL strategy"""
