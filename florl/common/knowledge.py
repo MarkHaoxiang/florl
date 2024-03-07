@@ -110,6 +110,29 @@ class Knowledge(ABC):
             ),
             parameters=parameters,
         )
+    
+    def unpack(self, ins: Parameters) -> List[KnowledgeShard]:
+        """ Unpacks parameters into shards
+
+        Args:
+            ins (Parameters): serialised knowledge.
+
+        Returns:
+            List[KnowledgeShard]: deserialisation.
+        """
+        # Deserialisation
+        tensor_types = ins.tensor_type.split(Knowledge.SEP_CHAR)
+        remaining = ins.tensors
+        contained_shards = []
+        for tensor_type in tensor_types:
+            _, length, _ = tensor_type.split(".", maxsplit=2)
+            length = int(length)
+            tensors, remaining = remaining[:length], remaining[length:]
+            shard = KnowledgeShard.unpack(
+                parameters=Parameters(tensors=tensors, tensor_type=tensor_type)
+            )
+            contained_shards.append(shard)
+        return contained_shards
 
     def set_parameters(self, ins: Parameters, shards: List[str] | None = None) -> None:
         """ Set the parameters for knowledge
@@ -119,16 +142,8 @@ class Knowledge(ABC):
             shards (List[str] | None, optional): List of shards to synchronise. Defaults to all shards.
         """
         # Deserialisation
-        tensor_types = ins.tensor_type.split(Knowledge.SEP_CHAR)
-        remaining = ins.tensors
-
-        for tensor_type in tensor_types:
-            _, length, _ = tensor_type.split(".", maxsplit=2)
-            length = int(length)
-            tensors, remaining = remaining[:length], remaining[length:]
-            shard = KnowledgeShard.unpack(
-                parameters=Parameters(tensors=tensors, tensor_type=tensor_type)
-            )
+        contained_shards = self.unpack(ins)
+        for shard in contained_shards:
             if shards is None or shard.name in shards:
                 self._shards_registry[shard.name] = shard
                 self._set_shard_callback(shard)
