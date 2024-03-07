@@ -17,7 +17,7 @@ def get_federated_metrics(
         ]
     )
     losses = losses.transpose((0, 2, 1, 3)).reshape(
-        (experiment_repeats, num_clients, total_rounds, 2)
+        (experiment_repeats * num_clients, total_rounds, 2)
     )[:, :, 1]
 
     rewards = np.array(

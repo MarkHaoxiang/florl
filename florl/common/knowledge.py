@@ -111,14 +111,12 @@ class Knowledge(ABC):
             parameters=parameters,
         )
 
-    def set_parameters(self, ins: Parameters) -> None:
-        """Set the parameters for knowledge
+    def set_parameters(self, ins: Parameters, shards: List[str] | None = None) -> None:
+        """ Set the parameters for knowledge
 
         Args:
-            ins (Parameters): From Knowledge.get_parameters
-
-        Raises:
-            ValueError: Inconsistent parameter mapping
+            ins (Parameters): From Knowledge.get_parameters.
+            shards (List[str] | None, optional): List of shards to synchronise. Defaults to all shards.
         """
         # Deserialisation
         tensor_types = ins.tensor_type.split(Knowledge.SEP_CHAR)
@@ -131,8 +129,9 @@ class Knowledge(ABC):
             shard = KnowledgeShard.unpack(
                 parameters=Parameters(tensors=tensors, tensor_type=tensor_type)
             )
-            self._shards_registry[shard.name] = shard
-            self._set_shard_callback(shard)
+            if shards is None or shard.name in shards:
+                self._shards_registry[shard.name] = shard
+                self._set_shard_callback(shard)
 
     def get_shard_parameters(self, shard: KnowledgeShard) -> GetParametersRes:
         """Fetches parameters from a shard
