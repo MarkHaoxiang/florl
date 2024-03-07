@@ -76,6 +76,53 @@ def stateful_client(
     return lambda cid: StatefulClient(cid=cid, client_fn=client_fn, ws=ws)
 
 
+
+
+
+_start_server = flwr.server.start_server
+# _start_client = flwr.client.start_client
+
+
+def _start_client(cid: int, **kwargs):
+    client = kwargs["client_fn"](str(cid))
+    kwargs.pop("client_fn")
+    flwr.client.start_client(client=client, **kwargs)
+
+
+def start_stateful_simulation(
+    client_fn: ClientFn,
+    num_clients: int,
+    config: ServerConfig,
+    strategy: Strategy,
+    client_manager: Optional[ClientManager] = None,
+    server_addr: str = "0.0.0.0:8080"
+) -> History:
+    
+    server_args = {
+        "server_address": server_addr,
+        "strategy": strategy,
+        "config": config,
+        "client_manager": client_manager,
+    }
+
+    client_args = {"server_address": server_addr, "client_fn": client_fn}
+
+    processes = []
+
+    server_process = Process(target=_start_server, kwargs=server_args)
+    server_process.start()
+
+    processes.append(server_process)
+    time.sleep(3)  # TODO: ideally we want to trigger based on server launch events
+
+    for cid in range(num_clients):
+        client_process = Process(target=_start_client, args=(cid,), kwargs=client_args)
+        # client_process = Process(target=_start_client, kwargs=client_args)
+        client_process.start()
+        processes.append(client_process)
+
+    server_process.join()
+
 # ==========
 # Functions from https://flower.ai/docs/framework/tutorial-series-get-started-with-flower-pytorch.html and the labs
 
@@ -117,59 +164,3 @@ def aggregate_weighted_average(metrics: List[Tuple[int, dict]]) -> dict:
         }
         for key, val in average_dict.items()
     }
-
-
-_start_server = flwr.server.start_server
-# _start_client = flwr.client.start_client
-
-
-def _start_client(cid: int, **kwargs):
-    client = kwargs["client_fn"](str(cid))
-    kwargs.pop("client_fn")
-    flwr.client.start_client(client=client, **kwargs)
-
-
-def start_stateful_simulation(
-    client_fn: ClientFn,
-    num_clients: int,
-    config: ServerConfig,
-    strategy: Strategy,
-    client_manager: Optional[ClientManager] = None,
-) -> History:
-    local_server_address = "0.0.0.0:8080"
-
-    try:
-        process_limit = len(os.sched_getaffinity(0))
-    except NotImplementedError:
-        # TODO: use standardised warning log/output interface
-        print(
-            "Cannot verify the number of available cores, using default=2",
-            file=sys.stderr,
-        )
-
-    assert num_clients < (process_limit - 1), "Not enough cores for clients"
-
-    server_args = {
-        "server_address": local_server_address,
-        "strategy": strategy,
-        "config": config,
-        "client_manager": client_manager,
-    }
-
-    client_args = {"server_address": local_server_address, "client_fn": client_fn}
-
-    processes = []
-
-    server_process = Process(target=_start_server, kwargs=server_args)
-    server_process.start()
-
-    processes.append(server_process)
-    time.sleep(3)  # TODO: ideally we want to trigger based on server launch events
-
-    for cid in range(num_clients):
-        client_process = Process(target=_start_client, args=(cid,), kwargs=client_args)
-        # client_process = Process(target=_start_client, kwargs=client_args)
-        client_process.start()
-        processes.append(client_process)
-
-    server_process.join()

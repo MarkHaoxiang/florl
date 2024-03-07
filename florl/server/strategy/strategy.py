@@ -28,7 +28,8 @@ class AggregateFitWrapper(Strategy):
                       failures: List[Tuple[ClientProxy, FitRes] | BaseException]
         ) -> Tuple[Parameters | Dict[str, bool | bytes | float | int | str] | None]:
         parameters_aggregated, metrics_aggregated = self.strategy.aggregate_fit(server_round, results, failures)
-        parameters_aggregated.tensor_type = results[0][1].parameters.tensor_type
+        if len(results) > 0:
+            parameters_aggregated.tensor_type = results[0][1].parameters.tensor_type
         return parameters_aggregated, metrics_aggregated
 
     def aggregate_evaluate(self, server_round: int, results: List[Tuple[ClientProxy | EvaluateRes]], failures: List[Tuple[ClientProxy, EvaluateRes] | BaseException]) -> Tuple[float | Dict[str, bool | bytes | float | int | str] | None]:
