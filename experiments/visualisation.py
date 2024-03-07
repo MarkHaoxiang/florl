@@ -57,7 +57,7 @@ def plot_rewards(ax, xs, rewards: List[Any], label: str, color: str = "green"):
         y1=rewards_mean - rewards_std * 1.96,
         y2=rewards_mean + rewards_std * 1.96,
         alpha=0.2,
-        color="g",
+        color=color,
     )
 
 
