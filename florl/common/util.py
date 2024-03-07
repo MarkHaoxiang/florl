@@ -76,14 +76,13 @@ def stateful_client(
     return lambda cid: StatefulClient(cid=cid, client_fn=client_fn, ws=ws)
 
 
-
-
-
 _start_server = flwr.server.start_server
-# _start_client = flwr.client.start_client
 
 
 def _start_client(cid: int, **kwargs):
+    """
+    This needs to be top level for multiprocessing to work
+    """
     client = kwargs["client_fn"](str(cid))
     kwargs.pop("client_fn")
     flwr.client.start_client(client=client, **kwargs)
@@ -95,9 +94,8 @@ def start_stateful_simulation(
     config: ServerConfig,
     strategy: Strategy,
     client_manager: Optional[ClientManager] = None,
-    server_addr: str = "0.0.0.0:8080"
+    server_addr: str = "0.0.0.0:8080",
 ) -> History:
-    
     server_args = {
         "server_address": server_addr,
         "strategy": strategy,
@@ -109,10 +107,12 @@ def start_stateful_simulation(
 
     processes = []
 
-    server_process = Process(target=_start_server, kwargs=server_args)
-    server_process.start()
+    # server_process = Process(target=_start_server, kwargs=server_args)
+    # server_process.start()
+    server_pool = Pool()
+    result = server_pool.apply_async(func=_start_server, kwds=server_args)
 
-    processes.append(server_process)
+    # processes.append(server_process)
     time.sleep(3)  # TODO: ideally we want to trigger based on server launch events
 
     for cid in range(num_clients):
@@ -121,7 +121,14 @@ def start_stateful_simulation(
         client_process.start()
         processes.append(client_process)
 
-    server_process.join()
+    server_pool.close()
+    server_pool.join()
+    for p in processes:
+        p.join()
+        p.close()
+    return result.get()
+    # server_process.join()
+
 
 # ==========
 # Functions from https://flower.ai/docs/framework/tutorial-series-get-started-with-flower-pytorch.html and the labs
