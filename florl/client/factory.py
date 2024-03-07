@@ -3,9 +3,10 @@ from flwr.common import Config
 
 from .client import FlorlClient
 
+
 class FlorlFactory(ABC):
-    """ Constructor for reinforcement learning clients
-    """
+    """Constructor for reinforcement learning clients"""
+
     def __init__(self, config: Config) -> None:
         self._cfg = config
 

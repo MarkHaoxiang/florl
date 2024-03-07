@@ -26,6 +26,7 @@ class QTOptKnowledge(NumPyKnowledge):
             "critic_target_2": self.critic_2.target,
         }
 
+
 class QTOptClient(KittenClient):
     def __init__(
         self,
@@ -36,7 +37,7 @@ class QTOptClient(KittenClient):
         device: str = "cpu",
     ):
         super().__init__(knowledge, env, config, seed, True, device)
-        self._knowl: QTOptKnowledge = self._knowl # Type hints
+        self._knowl: QTOptKnowledge = self._knowl  # Type hints
 
     # Algorithm
     def build_algorithm(self) -> None:

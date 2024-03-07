@@ -10,6 +10,7 @@ from florl.client import FlorlFactory
 from florl.common import NumPyKnowledge
 from florl.client.kitten import KittenClient
 
+
 class DQNKnowledge(NumPyKnowledge):
     def __init__(self, critic: kitten.nn.Critic) -> None:
         super().__init__(["critic", "critic_target"])
@@ -17,10 +18,8 @@ class DQNKnowledge(NumPyKnowledge):
 
     @property
     def torch_modules_registry(self):
-        return {
-            "critic": self.critic.net,
-            "critic_target": self.critic.target
-        }
+        return {"critic": self.critic.net, "critic_target": self.critic.target}
+
 
 class DQNClient(KittenClient):
     def __init__(
@@ -32,7 +31,7 @@ class DQNClient(KittenClient):
         device: str = "cpu",
     ):
         super().__init__(knowledge, env, config, seed, True, device)
-        self._knowl: DQNKnowledge = self._knowl # Typing hints
+        self._knowl: DQNKnowledge = self._knowl  # Typing hints
 
     # Algorithm
     def build_algorithm(self) -> None:

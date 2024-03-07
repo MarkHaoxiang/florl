@@ -49,11 +49,14 @@ class KnowledgeShard:
         name, length, tensor_type = parameters.tensor_type.split(".", maxsplit=2)
         tensors = parameters.tensors
         if int(length) != len(tensors):
-            raise ValueError(f"Inconsistency in tensors length for {name} with lengths {length} and {len(tensors)}")
+            raise ValueError(
+                f"Inconsistency in tensors length for {name} with lengths {length} and {len(tensors)}"
+            )
         return KnowledgeShard(
             name=name,
             parameters=Parameters(tensors=tensors, tensor_type=tensor_type),
         )
+
 
 class Knowledge(ABC):
     """Represents abstract information used in an algorithm"""
@@ -69,8 +72,7 @@ class Knowledge(ABC):
         """
         super().__init__()
         self._shards_registry = {
-            name: KnowledgeShard(name=name, parameters=None)
-            for name in shards
+            name: KnowledgeShard(name=name, parameters=None) for name in shards
         }
 
     def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
@@ -89,11 +91,11 @@ class Knowledge(ABC):
         shards = [self._shards_registry[s] for s in shards]
         # Fetch parameters
         all_parameters_res = [self.get_shard_parameters(s) for s in shards]
-            # Status Validation
+        # Status Validation
         for parameter_res in all_parameters_res:
             if parameter_res.status.code != Code.OK:
                 return parameter_res
-            
+
         parameters = Parameters(
             tensor_type=Knowledge.SEP_CHAR.join(
                 [x.parameters.tensor_type for x in all_parameters_res]
@@ -106,11 +108,11 @@ class Knowledge(ABC):
                 code=Code.OK,
                 message="",
             ),
-            parameters=parameters
+            parameters=parameters,
         )
-    
+
     def set_parameters(self, ins: Parameters) -> None:
-        """ Set the parameters for knowledge
+        """Set the parameters for knowledge
 
         Args:
             ins (Parameters): From Knowledge.get_parameters
@@ -126,12 +128,14 @@ class Knowledge(ABC):
             _, length, _ = tensor_type.split(".", maxsplit=2)
             length = int(length)
             tensors, remaining = remaining[:length], remaining[length:]
-            shard = KnowledgeShard.unpack(parameters=Parameters(tensors=tensors, tensor_type=tensor_type))
+            shard = KnowledgeShard.unpack(
+                parameters=Parameters(tensors=tensors, tensor_type=tensor_type)
+            )
             self._shards_registry[shard.name] = shard
             self._set_shard_callback(shard)
 
     def get_shard_parameters(self, shard: KnowledgeShard) -> GetParametersRes:
-        """ Fetches parameters from a shard
+        """Fetches parameters from a shard
 
         Returns:
             GetParametersRes: fetch result.
@@ -145,10 +149,7 @@ class Knowledge(ABC):
             )
         parameters = self._get_shard_parameters(shard.name)
         shard.parameters = parameters
-        return GetParametersRes(
-            status=Status(Code.OK, ""),
-            parameters=shard.pack()
-        )
+        return GetParametersRes(status=Status(Code.OK, ""), parameters=shard.pack())
 
     # ==========
     # Implement these!
@@ -162,21 +163,23 @@ class Knowledge(ABC):
     def _set_shard_callback(self, shard: KnowledgeShard) -> None:
         raise NotImplementedError
 
+
 class NumPyKnowledge(Knowledge, ABC):
-    """ Knowledge, where each shard has a corresponding NumPy parameter representation.
-    """
+    """Knowledge, where each shard has a corresponding NumPy parameter representation."""
+
     def _get_shard_parameters(self, name: str) -> Parameters:
         numpy_parameters = self._get_shard_parameters_numpy(name)
         return ndarrays_to_parameters(numpy_parameters)
 
     @property
     def torch_modules_registry(self) -> Dict[str, nn.Module]:
-        """ Optional registry of mappings from names to Torch network
-        """
+        """Optional registry of mappings from names to Torch network"""
         return {}
 
     def _set_shard_callback(self, shard: KnowledgeShard) -> None:
-        return self._set_shard_callback_numpy(shard.name, parameters_to_ndarrays(shard.parameters))
+        return self._set_shard_callback_numpy(
+            shard.name, parameters_to_ndarrays(shard.parameters)
+        )
 
     def _get_shard_parameters_numpy(self, name: str) -> NDArrays:
         if name in self.torch_modules_registry:
@@ -185,8 +188,5 @@ class NumPyKnowledge(Knowledge, ABC):
 
     def _set_shard_callback_numpy(self, name: str, params: NDArrays) -> None:
         if name in self.torch_modules_registry:
-            return set_torch_parameters(
-                self.torch_modules_registry[name],
-                params
-            )
+            return set_torch_parameters(self.torch_modules_registry[name], params)
         raise NotImplementedError
