@@ -1,5 +1,5 @@
 import os
-from logging import WARNING
+from logging import INFO, WARNING
 from typing import List, Tuple, Union, TypeAlias
 
 import torch
@@ -18,7 +18,7 @@ from flwr.common.typing import (
     NDArrays,
     Config,
     Parameters,
-    GetParametersIns
+    GetParametersIns,
 )
 
 from florl.client import FlorlClient
@@ -35,27 +35,27 @@ FAILURES: TypeAlias = List[Union[Tuple[ClientProxy, FitRes], BaseException]]
 # This is a default
 replay_buffer_workspace = "florl_ws"
 
+
 def get_evaluation_fn(evaluation_client: FlorlClient):
-    """ Utility to to set centralised evaluation
+    """Utility to to set centralised evaluation
 
     Args:
         evaluation_client (FlorlClient): client used to run evaluation rounds.
     """
+
     def evaluate(server_rounds: int, parameters: Parameters):
-        ins = EvaluateIns(
-            parameters=parameters,
-            config={}
-        )
+        ins = EvaluateIns(parameters=parameters, config={})
         evaluation_result = evaluation_client.evaluate(ins)
         return evaluation_result.loss, evaluation_result.metrics
 
     return evaluate
 
+
 def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
     """Override of get_properties function;
     currently gets replay buffer from Kitten Clients"""
     results: Properties = {}
-    if cid := ins.config.get("cid") is None:
+    if (cid := ins.config.get("cid")) is None:
         return GetPropertiesRes(
             status=Status(
                 code=Code.GET_PROPERTIES_NOT_IMPLEMENTED,
@@ -65,9 +65,9 @@ def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
         )
     if ins.config.get("replay_buffer", False) and self._memory is not None:
         replay_path = os.path.join(
-            replay_buffer_workspace, f"replay_{cid}_{self.step()}.pt"
+            replay_buffer_workspace, f"replay_{cid}_{self.step}.pt"
         )
-        log(WARNING, "new get property called on client side")
+        log(INFO, "new get property called on client side")
         torch.save(self._memory.storage, replay_path)
         results["cid"] = cid
         results["replay_buffer"] = replay_path
