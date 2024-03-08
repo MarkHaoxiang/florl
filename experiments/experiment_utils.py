@@ -1,12 +1,10 @@
 import os
-from typing import List, Tuple, Union
+from logging import WARNING
+from typing import List, Tuple, Union, TypeAlias
 
 import torch
-
-from logging import WARNING
 from flwr.common.logger import log
 from flwr.server.client_proxy import ClientProxy
-from flwr.server.client_manager import ClientManager
 from flwr.common.typing import (
     Code,
     EvaluateIns,
@@ -15,23 +13,43 @@ from flwr.common.typing import (
     FitRes,
     GetPropertiesIns,
     GetPropertiesRes,
-    Parameters,
     Properties,
     Status,
+    NDArrays,
+    Config,
+    Parameters,
+    GetParametersIns
 )
+
+from florl.client import FlorlClient
 
 from strategy import RlFedAvg
 
 
-CFG_FIT = List[Tuple[ClientProxy, FitIns]]
-RES_FIT = List[Tuple[ClientProxy, FitRes]]
-CFG_EVAL = List[Tuple[ClientProxy, EvaluateIns]]
-RES_FIT = List[Tuple[ClientProxy, EvaluateRes]]
-FAILURES = List[Union[Tuple[ClientProxy, FitRes], BaseException]]
+CFG_FIT: TypeAlias = List[Tuple[ClientProxy, FitIns]]
+RES_FIT: TypeAlias = List[Tuple[ClientProxy, FitRes]]
+CFG_EVAL: TypeAlias = List[Tuple[ClientProxy, EvaluateIns]]
+RES_FIT: TypeAlias = List[Tuple[ClientProxy, EvaluateRes]]
+FAILURES: TypeAlias = List[Union[Tuple[ClientProxy, FitRes], BaseException]]
 
 # This is a default
 replay_buffer_workspace = "florl_ws"
 
+def get_evaluation_fn(evaluation_client: FlorlClient):
+    """ Utility to to set centralised evaluation
+
+    Args:
+        evaluation_client (FlorlClient): client used to run evaluation rounds.
+    """
+    def evaluate(server_rounds: int, parameters: Parameters):
+        ins = EvaluateIns(
+            parameters=parameters,
+            config={}
+        )
+        evaluation_result = evaluation_client.evaluate(ins)
+        return evaluation_result.loss, evaluation_result.metrics
+
+    return evaluate
 
 def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
     """Override of get_properties function;

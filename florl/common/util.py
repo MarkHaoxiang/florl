@@ -6,7 +6,7 @@ from typing import Callable, List, Tuple, OrderedDict, Optional
 from collections import defaultdict
 import numbers
 import flwr
-from flwr.common import EvaluateIns, EvaluateRes, FitIns, FitRes, NDArrays
+from flwr.common import Context, EvaluateIns, EvaluateRes, FitIns, FitRes, GetParametersIns, GetParametersRes, GetPropertiesIns, GetPropertiesRes, NDArrays
 from flwr.client import Client, ClientFn
 
 # from flwr.server import Server
@@ -27,10 +27,14 @@ class StatefulClient(Client):
     """A wrapper to enabled pickled client states on disk as an alternative to Context for stateful execution
 
     # TODO: Add encryption to ensure security. But really this entire thing is a hack, how to save complex state is worth discussing.
+
+    # TODO: This breaks has_get_... in flower.client.py - but that's more of a hack on Flower's side. 
     """
 
     def __init__(
-        self, cid: str, client_fn: Callable[[str], Client], ws: str = "florl_ws"
+        self, cid: str,
+        client_fn: Callable[[str], Client],
+        ws: str = "florl_ws"
     ):
         cid = str(cid)
 
@@ -51,6 +55,15 @@ class StatefulClient(Client):
 
     def load_client(self):
         self._client = pickle.load(open(self._client_path, "rb"))
+
+    def get_context(self) -> Context:
+        return self._client.get_context()
+    
+    def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
+        return self._client.get_parameters(ins)
+    
+    def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
+        return self._client.get_properties()
 
     def fit(self, ins: FitIns) -> FitRes:
         result = self._client.fit(ins)

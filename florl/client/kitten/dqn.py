@@ -28,9 +28,12 @@ class DQNClient(KittenClient):
         env: gym.Env,
         config: Config,
         seed: int | None = None,
+        enable_evaluation: bool = True,
         device: str = "cpu",
     ):
-        super().__init__(knowledge, env, config, seed, True, device)
+        super().__init__(
+            knowledge, env, config, seed, True, enable_evaluation,device
+        )
         self._knowl: DQNKnowledge = self._knowl  # Typing hints
 
     # Algorithm
@@ -94,7 +97,7 @@ class DQNClientFactory(FlorlFactory):
         knowledge = DQNKnowledge(net)
         return knowledge
 
-    def create_client(self, cid: str, config: Config) -> DQNClient:
+    def create_client(self, cid: str, config: Config, **kwargs) -> DQNClient:
         try:
             cid = int(cid)
         except:
@@ -102,6 +105,11 @@ class DQNClientFactory(FlorlFactory):
         env = copy.deepcopy(self.env)
         knowledge = self.create_default_knowledge(config)
         client = DQNClient(
-            knowledge=knowledge, env=env, config=config, seed=cid, device=self.device
+            knowledge=knowledge,
+            env=env,
+            config=config,
+            seed=cid,
+            device=self.device,
+            **kwargs
         )
         return client

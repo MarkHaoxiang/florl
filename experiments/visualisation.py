@@ -9,6 +9,7 @@ def get_federated_metrics(
     experiment_repeats: int,
     num_clients: int,
     total_rounds: int,
+    centralised_evaluation: bool = False
 ):
     losses = np.array(
         [
@@ -20,12 +21,15 @@ def get_federated_metrics(
         (experiment_repeats * num_clients, total_rounds, 2)
     )[:, :, 1]
 
-    rewards = np.array(
-        [[x[1]["all"] for x in hist.metrics_distributed["reward"]] for hist in results]
-    )
-    rewards = rewards.transpose((0, 2, 1, 3)).reshape(
-        (experiment_repeats * num_clients, total_rounds, 2)
-    )[:, :, 1]
+    if not centralised_evaluation:
+        rewards = np.array(
+            [[x[1]["all"] for x in hist.metrics_distributed["reward"]] for hist in results]
+        )
+        rewards = rewards.transpose((0, 2, 1, 3)).reshape(
+            (experiment_repeats * num_clients, total_rounds, 2)
+        )[:, :, 1]
+    else:
+        rewards = np.array([[x[1] for x in hist.metrics_centralized['reward']][1:] for hist in results])
 
     return losses, rewards
 

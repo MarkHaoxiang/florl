@@ -1,11 +1,11 @@
-from typing import Dict, Tuple, List
+from typing import Callable, Dict, Tuple, List
 from logging import WARNING
 
 from flwr.common.logger import log
 from flwr.server.client_manager import ClientManager
 from flwr.server.strategy import FedAvg, aggregate
 from flwr.common import (
-    EvaluateIns,
+    Scalar,
     FitRes,
     GetParametersIns,
     Parameters,
@@ -20,7 +20,10 @@ from florl.server.strategy import FlorlStrategy
 class RlFedAvg(FedAvg, FlorlStrategy):
     """Custom FedAvg with adaptation to Florl specific features"""
 
-    def __init__(self, knowledge: Knowledge, *args, **kwargs):
+    def __init__(self,
+                 knowledge: Knowledge,
+                 evaluate_fn: Callable | None = None,
+                 *args, **kwargs):
         """Custom FedAvg with adaptation to Florol specific features
 
         Args:
@@ -30,6 +33,7 @@ class RlFedAvg(FedAvg, FlorlStrategy):
         """
         FedAvg.__init__(self, *args, **kwargs)
         FlorlStrategy.__init__(self, knowledge)
+        self._evaluate_fn = evaluate_fn
 
     def aggregate_fit(
         self,
@@ -87,6 +91,15 @@ class RlFedAvg(FedAvg, FlorlStrategy):
 
         return parameters_aggregated, metrics_aggregated
 
+    def evaluate(self,
+                 server_round: int,
+                 parameters: Parameters
+        ) -> Tuple[float, Dict[str, Scalar]] | None:
+        """ Evaluate model parameters using an evaluation function
+        """
+        if self._evaluate_fn is None:
+            return None
+        return self._evaluate_fn(server_round, parameters)
 
     def configure_evaluate(self,
                            server_round: int,

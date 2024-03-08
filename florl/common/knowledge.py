@@ -75,7 +75,7 @@ class Knowledge(ABC):
             name: KnowledgeShard(name=name, parameters=None) for name in shards
         }
 
-    def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
+    def get_parameters(self, ins: GetParametersIns | None) -> GetParametersRes:
         """Return the parameter serialisation of this Knowledge
 
         Args:

@@ -21,9 +21,10 @@ class KittenClient(GymClient, ABC):
         config: Config,
         seed: int | None = None,
         build_memory: bool = False,
+        enable_evaluation: bool = True,
         device: str = "cpu",
     ):
-        super().__init__(knowledge, env, seed)
+        super().__init__(knowledge, env, seed, enable_evaluation)
 
         self._cfg = copy.deepcopy(config)
         self._device = device
@@ -52,7 +53,6 @@ class KittenClient(GymClient, ABC):
         torch.manual_seed(self._rng.numpy.integers(0, 65535))
         repeats = config.get("evaluation_repeats", self._evaluator.repeats)
         reward = self._evaluator.evaluate(self.policy, repeats)
-        # TODO: What is loss under this framework? API shouldn't enforce returning this
         return repeats, {"reward": reward}
 
     @property

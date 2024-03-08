@@ -38,9 +38,12 @@ class QTOptClient(KittenClient):
         env: gym.Env,
         config: Config,
         seed: int | None = None,
+        enable_evaluation: bool = True,
         device: str = "cpu",
     ):
-        super().__init__(knowledge, env, config, seed, True, device)
+        super().__init__(
+            knowledge, env, config, seed, True, enable_evaluation, device
+        )
         self._knowl: QTOptKnowledge = self._knowl  # Type hints
 
     # Algorithm
@@ -111,7 +114,7 @@ class QTOptClientFactory(FlorlFactory):
         knowledge = QTOptKnowledge(net_1, net_2)
         return knowledge
 
-    def create_client(self, cid: str, config: Config) -> QTOptClient:
+    def create_client(self, cid: str, config: Config, **kwargs) -> QTOptClient:
         try:
             cid = int(cid)
         except:
@@ -120,6 +123,11 @@ class QTOptClientFactory(FlorlFactory):
 
         knowledge = self.create_default_knowledge(config)
         client = QTOptClient(
-            knowledge=knowledge, env=env, config=config, seed=cid, device=self.device
+            knowledge=knowledge,
+            env=env,
+            config=config,
+            seed=cid,
+            device=self.device,
+            **kwargs
         )
         return client

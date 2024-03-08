@@ -23,8 +23,10 @@ from florl.common.knowledge import Knowledge
 class FlorlClient(fl.client.Client, ABC):
     """A client interface specific to reinforcement learning"""
 
-    def __init__(self, knowledge: Knowledge):
+    def __init__(self, knowledge: Knowledge, enable_evaluation: bool = True):
+        super().__init__()
         self._knowl = knowledge
+        self._enable_evaluation = enable_evaluation
 
     def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
         return self._knowl.get_parameters(ins)
@@ -54,6 +56,14 @@ class FlorlClient(fl.client.Client, ABC):
             )
 
     def evaluate(self, ins: EvaluateIns) -> EvaluateRes:
+        if not self._enable_evaluation:
+            return EvaluateRes(
+                status=Status(Code.EVALUATE_NOT_IMPLEMENTED, "Evaluation Disabled"),
+                loss=0.0,
+                num_examples=0.0,
+                metrics={}
+            )
+
         self._knowl.set_parameters(
             ins.parameters, shards=ins.config.get("shards", None)
         )
@@ -97,8 +107,13 @@ class FlorlClient(fl.client.Client, ABC):
 class GymClient(FlorlClient, ABC):
     """An RL client training within a gym environment"""
 
-    def __init__(self, knowledge: Knowledge, env: gym.Env, seed: int | None = None):
-        super().__init__(knowledge)
+    def __init__(self,
+                 knowledge: Knowledge,
+                 env: gym.Env,
+                 seed: int | None = None,
+                 enable_evaluation: bool = True,
+        ):
+        super().__init__(knowledge, enable_evaluation)
         self._env = env
         self._seed = seed
 
