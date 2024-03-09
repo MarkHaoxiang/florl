@@ -61,7 +61,7 @@ class FlorlClient(fl.client.Client, ABC):
                 status=Status(Code.EVALUATE_NOT_IMPLEMENTED, "Evaluation Disabled"),
                 loss=0.0,
                 num_examples=0.0,
-                metrics={}
+                metrics={},
             )
 
         self._knowl.set_parameters(
@@ -107,12 +107,13 @@ class FlorlClient(fl.client.Client, ABC):
 class GymClient(FlorlClient, ABC):
     """An RL client training within a gym environment"""
 
-    def __init__(self,
-                 knowledge: Knowledge,
-                 env: gym.Env,
-                 seed: int | None = None,
-                 enable_evaluation: bool = True,
-        ):
+    def __init__(
+        self,
+        knowledge: Knowledge,
+        env: gym.Env,
+        seed: int | None = None,
+        enable_evaluation: bool = True,
+    ):
         super().__init__(knowledge, enable_evaluation)
         self._env = env
         self._seed = seed

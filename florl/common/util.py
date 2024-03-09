@@ -1,5 +1,4 @@
 import os
-import sys
 import pickle
 import time
 from typing import Callable, List, Tuple, OrderedDict, Optional
@@ -20,7 +19,6 @@ from flwr.common import (
 )
 from flwr.client import Client, ClientFn
 
-# from flwr.server import Server
 from flwr.server.server_config import ServerConfig
 from flwr.server.strategy import Strategy
 from flwr.server.history import History

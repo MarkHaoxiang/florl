@@ -31,9 +31,7 @@ class DQNClient(KittenClient):
         enable_evaluation: bool = True,
         device: str = "cpu",
     ):
-        super().__init__(
-            knowledge, env, config, seed, True, enable_evaluation,device
-        )
+        super().__init__(knowledge, env, config, seed, True, enable_evaluation, device)
         self._knowl: DQNKnowledge = self._knowl  # Typing hints
 
     # Algorithm
@@ -110,6 +108,6 @@ class DQNClientFactory(FlorlFactory):
             config=config,
             seed=cid,
             device=self.device,
-            **kwargs
+            **kwargs,
         )
         return client

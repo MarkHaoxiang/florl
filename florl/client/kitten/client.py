@@ -40,8 +40,10 @@ class KittenClient(GymClient, ABC):
         self.build_algorithm()
         self._memory = None
         if build_memory:
-            self._memory = kitten.experience.util.build_replay_buffer(
-                env=self._env, device=self._device, **self._cfg.get("memory", {})
+            self._memory: kitten.experience.memory.ReplayBuffer = (
+                kitten.experience.util.build_replay_buffer(
+                    env=self._env, device=self._device, **self._cfg.get("memory", {})
+                )
             )
 
         self._collector = kitten.experience.util.build_collector(

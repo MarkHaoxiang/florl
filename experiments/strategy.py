@@ -20,10 +20,9 @@ from florl.server.strategy import FlorlStrategy
 class RlFedAvg(FedAvg, FlorlStrategy):
     """Custom FedAvg with adaptation to Florl specific features"""
 
-    def __init__(self,
-                 knowledge: Knowledge,
-                 evaluate_fn: Callable | None = None,
-                 *args, **kwargs):
+    def __init__(
+        self, knowledge: Knowledge, evaluate_fn: Callable | None = None, *args, **kwargs
+    ):
         """Custom FedAvg with adaptation to Florol specific features
 
         Args:
@@ -78,7 +77,9 @@ class RlFedAvg(FedAvg, FlorlStrategy):
             )
         # Update own knowledge base
         self._knowledge.update_knowledge(shards=list(aggregated_shards.values()))
-        parameters_aggregated = self._knowledge.get_parameters(GetParametersIns({})).parameters
+        parameters_aggregated = self._knowledge.get_parameters(
+            GetParametersIns({})
+        ).parameters
 
         # From FedAvg
         # Aggregate custom metrics if aggregation fn was provided
@@ -91,19 +92,15 @@ class RlFedAvg(FedAvg, FlorlStrategy):
 
         return parameters_aggregated, metrics_aggregated
 
-    def evaluate(self,
-                 server_round: int,
-                 parameters: Parameters
-        ) -> Tuple[float, Dict[str, Scalar]] | None:
-        """ Evaluate model parameters using an evaluation function
-        """
+    def evaluate(
+        self, server_round: int, parameters: Parameters
+    ) -> Tuple[float, Dict[str, Scalar]] | None:
+        """Evaluate model parameters using an evaluation function"""
         if self._evaluate_fn is None:
             return None
         return self._evaluate_fn(server_round, parameters)
 
-    def configure_evaluate(self,
-                           server_round: int,
-                           parameters: Parameters,
-                           client_manager: ClientManager
-        ):
+    def configure_evaluate(
+        self, server_round: int, parameters: Parameters, client_manager: ClientManager
+    ):
         return super().configure_evaluate(server_round, parameters, client_manager)
