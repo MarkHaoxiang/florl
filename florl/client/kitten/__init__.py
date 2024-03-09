@@ -1,1 +1,1 @@
-from .client import KittenClient
+from .client import KittenClient, KittenClientWrapper

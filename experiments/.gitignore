@@ -1,4 +1,4 @@
-napkin.ipynb
+*.ipynb
 florl_ws
 results
 *.pkl

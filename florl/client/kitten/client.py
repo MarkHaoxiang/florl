@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 import copy
 from typing import Tuple, Dict
+from flwr.common import Context, GetPropertiesIns, GetPropertiesRes
 
-from flwr.common.typing import Scalar, Config
+from flwr.common.typing import GetParametersIns, GetParametersRes, Scalar, Config
 from gymnasium.core import Env
 import torch
 import kitten
@@ -78,3 +79,41 @@ class KittenClient(GymClient, ABC):
 
     def early_start(self):
         pass
+
+class KittenClientWrapper(KittenClient):
+    """ Utility to quickly wrap a client
+    """
+    def __init__(self, client: KittenClient):
+        self._client = client
+        self._knowl = self._client._knowl
+        self._enable_evaluation = self._client._enable_evaluation
+
+    def build_algorithm(self) -> None:
+        return self._client.build_algorithm()
+    
+    def early_start(self) -> None:
+        return self._client.early_start()
+
+    def train(self, config: Config):
+        return self._client.train(config)
+ 
+    def epoch(self, config: Config):
+        return self._client.epoch(config)
+
+    def get_context(self) -> Context:
+        return self._client.get_context()
+
+    def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
+        return self._client.get_parameters(ins)
+
+    def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
+        return self._client.get_properties(ins)
+
+    @property
+    def policy(self) -> kitten.policy.Policy:
+        return self._client.policy
+    
+    @property
+    def algorithm(self) -> kitten.rl.Algorithm:
+        return self._client.algorithm
+    

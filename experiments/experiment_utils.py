@@ -1,4 +1,6 @@
 import os
+import copy
+import pickle
 from logging import INFO, WARNING
 from typing import List, Tuple, Union, TypeAlias
 
@@ -22,8 +24,10 @@ from flwr.common.typing import (
 )
 
 from florl.client import FlorlClient
+from florl.client.kitten import KittenClientWrapper
 
 from strategy import RlFedAvg
+
 
 
 CFG_FIT: TypeAlias = List[Tuple[ClientProxy, FitIns]]
@@ -118,28 +122,14 @@ class EvalReplayFedAvg(RlFedAvg):
             )
         return parameters_aggregated, metrics_aggregated
 
-    ## Test if this work
-    # def configure_evaluate(
-    #     self, server_round: int, parameters: Parameters, client_manager: ClientManager
-    # ):
-    #     super_res = super().configure_evaluate(server_round, parameters, client_manager)
-    #     property_request = {"replay_buffer": True, "cid": -1}
-    #     for client_proxy, _ in super_res:
-    #         # TODO: handle failed clients
-    #         config = property_request.copy()
-    #         config["cid"] = client_proxy.cid
-    #         prop = client_proxy.get_properties(
-    #             GetPropertiesIns(config=config), 50, client_proxy.cid
-    #         )
-    #         log(
-    #             WARNING,
-    #             f"Get Properties Request got {prop.status.code} : {prop.status.message}",
-    #         )
-    #         self.pickeled_paths.append(
-    #             (
-    #                 server_round,
-    #                 client_proxy.cid,
-    #                 prop.properties.get("replay_buffer", ""),
-    #             )
-    #         )
-    #     return super_res
+class MemoryClient(KittenClientWrapper):
+    """ Records the memory state
+    """
+    def train(self, train_config: Config):
+        n, metrics =  super().train(train_config)
+
+        storage = pickle.dumps(self._client._memory.storage)
+        metrics["rb"] =storage
+        return n, metrics
+
+    
