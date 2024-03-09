@@ -175,13 +175,17 @@ def aggregate_weighted_average(metrics: List[Tuple[int, dict]]) -> dict:
         dict: result dictionary containing the aggregate of the metrics passed.
     """
     average_dict: dict = defaultdict(list)
+    other_dict: dict = defaultdict(list)
+
     total_examples: int = 0
     for num_examples, metrics_dict in metrics:
         for key, val in metrics_dict.items():
             if isinstance(val, numbers.Number):
                 average_dict[key].append((num_examples, val))  # type:ignore
+            else:
+                other_dict[key].append(val)
         total_examples += num_examples
-    return {
+    aggregated_metrics = {
         key: {
             "avg": float(
                 sum([num_examples * metr for num_examples, metr in val])
@@ -191,3 +195,6 @@ def aggregate_weighted_average(metrics: List[Tuple[int, dict]]) -> dict:
         }
         for key, val in average_dict.items()
     }
+    result = aggregated_metrics | other_dict
+    return result
+

@@ -116,4 +116,3 @@ class KittenClientWrapper(KittenClient):
     @property
     def algorithm(self) -> kitten.rl.Algorithm:
         return self._client.algorithm
-    

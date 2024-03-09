@@ -128,8 +128,8 @@ class MemoryClient(KittenClientWrapper):
     def train(self, train_config: Config):
         n, metrics =  super().train(train_config)
 
-        storage = pickle.dumps(self._client._memory.storage)
-        metrics["rb"] =storage
+        storage = pickle.dumps(self._client._memory.storage[0])
+        metrics["rb"] = storage
         return n, metrics
 
     
