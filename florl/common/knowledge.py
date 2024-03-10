@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List
 
 from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays
 from florl.common.util import get_torch_parameters, set_torch_parameters
@@ -64,13 +63,16 @@ class Knowledge(ABC):
     # TODO: Serialisation hack
     SEP_CHAR = "|"
 
-    def __init__(self, shards: List[str]) -> None:
+    def __init__(self, shards: list[str]) -> None:
         """Defines Knowledge
 
         Args:
             modules (List[str]): Names of each knowledge shard within knowledge
         """
         super().__init__()
+        for shard in shards:
+            if Knowledge.SEP_CHAR in shard:
+                raise ValueError(f"Invalid character {Knowledge.SEP_CHAR} in shard identifier.")
         self._shards_registry = {
             name: KnowledgeShard(name=name, parameters=None) for name in shards
         }
@@ -85,7 +87,7 @@ class Knowledge(ABC):
             GetParametersRes: Parameter results.
         """
         # List of shards to fetch
-        shards: List[str] = ins.config.get(
+        shards: list[str] = ins.config.get(
             "shards", [shard.name for shard in self._shards_registry.values()]
         )
         shards = [self._shards_registry[s] for s in shards]
@@ -112,7 +114,7 @@ class Knowledge(ABC):
         )
 
     @staticmethod
-    def unpack(ins: Parameters) -> List[KnowledgeShard]:
+    def unpack(ins: Parameters) -> list[KnowledgeShard]:
         """Unpacks parameters into shards
 
         Args:
@@ -136,20 +138,22 @@ class Knowledge(ABC):
         return contained_shards
 
     def update_knowledge(
-        self, shards: List[KnowledgeShard], shard_filter: List[str] | None = None
+        self, shards: list[KnowledgeShard], shard_filter: list[str] | None = None
     ) -> None:
         for shard in shards:
             if shard_filter is None or shard.name in shard_filter:
                 self._shards_registry[shard.name] = shard
                 self._set_shard_callback(shard)
 
-    def set_parameters(self, ins: Parameters, shards: List[str] | None = None) -> None:
+    def set_parameters(self, ins: Parameters, shards: str | None = None) -> None:
         """Set the parameters for knowledge
 
         Args:
             ins (Parameters): From Knowledge.get_parameters.
             shards (List[str] | None, optional): List of shards to synchronise. Defaults to all shards.
         """
+        if isinstance(shards, str):
+            shards = shards.split(Knowledge.SEP_CHAR)
         # Deserialisation
         contained_shards = Knowledge.unpack(ins)
         self.update_knowledge(contained_shards, shard_filter=shards)
@@ -192,7 +196,7 @@ class NumPyKnowledge(Knowledge, ABC):
         return ndarrays_to_parameters(numpy_parameters)
 
     @property
-    def torch_modules_registry(self) -> Dict[str, nn.Module]:
+    def torch_modules_registry(self) -> dict[str, nn.Module]:
         """Optional registry of mappings from names to Torch network"""
         return {}
 
