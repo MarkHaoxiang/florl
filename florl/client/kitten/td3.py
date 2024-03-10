@@ -41,7 +41,7 @@ class TD3Knowledge(NumPyKnowledge):
             "critic_2": self.critic_2.net,
             "critic_target_2": self.critic_2.target,
             "actor": self.actor.net,
-            "actor_2": self.actor.target,
+            "actor_target": self.actor.target,
         }
 
 
@@ -109,7 +109,7 @@ class TD3Client(KittenClient):
     def train(self, train_config: Config):
         metrics = {}
         # Synchronise critic net
-        critic_loss = []
+        train_loss = []
         # Training
         for _ in range(train_config["frames"]):
             self._step += 1
@@ -118,10 +118,10 @@ class TD3Client(KittenClient):
             batch, aux = self._memory.sample(self._cfg["train"]["minibatch_size"])
             batch = kitten.experience.Transition(*batch)
             # Algorithm Update
-            critic_loss.append(self.algorithm.update(batch, aux, self.step))
+            train_loss.append(sum(self.algorithm.update(batch, aux, self.step)))
 
         # Logging
-        metrics["loss"] = sum(critic_loss) / len(critic_loss)
+        metrics["loss"] = sum(train_loss) / len(train_loss)
         return len(self._memory), metrics
 
 

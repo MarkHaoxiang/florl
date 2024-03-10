@@ -151,7 +151,7 @@ def start_stateful_simulation(
 
 
 # ==========
-# Functions from https://flower.ai/docs/framework/tutorial-series-get-started-with-flower-pytorch.html and the labs
+# Functions adapted from https://flower.ai/docs/framework/tutorial-series-get-started-with-flower-pytorch.html and the labs
 
 
 def set_torch_parameters(net: torch.nn.Module, parameters: NDArrays):
