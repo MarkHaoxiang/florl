@@ -28,8 +28,6 @@ from florl.client.kitten import KittenClientWrapper
 
 from strategy import RlFedAvg
 
-
-
 CFG_FIT: TypeAlias = List[Tuple[ClientProxy, FitIns]]
 RES_FIT: TypeAlias = List[Tuple[ClientProxy, FitRes]]
 CFG_EVAL: TypeAlias = List[Tuple[ClientProxy, EvaluateIns]]
@@ -128,8 +126,22 @@ class MemoryClient(KittenClientWrapper):
     def train(self, train_config: Config):
         n, metrics =  super().train(train_config)
 
-        storage = pickle.dumps(self._client._memory.storage[0])
-        metrics["rb"] = storage
+        seen_states = self._client._memory.storage[0]
+
+        metrics["id"] = self._client._seed
+        metrics["rb"] = pickle.dumps(seen_states)
+        metrics["rb_size"] = len(self._client._memory)
+
+        frames = train_config["frames"]
+        if frames <= self._client._memory.capacity:
+            # Get newly collected frames
+            append_index = self._client._memory._append_index
+            newly_collected_frames = seen_states[max(0, append_index-frames):append_index]
+            if append_index-frames < 0:
+                newly_collected_frames = torch.cat((
+                    newly_collected_frames,
+                    seen_states[append_index-frames:]
+                ))
+            metrics["rb_new"] = pickle.dumps(newly_collected_frames)
         return n, metrics
 
-    
