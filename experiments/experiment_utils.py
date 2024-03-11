@@ -25,8 +25,10 @@ from flwr.common.typing import (
 
 from florl.client import FlorlClient
 from florl.client.kitten import KittenClientWrapper
-
-from strategy import RlFedAvg
+try:
+    from strategy import RlFedAvg
+except ModuleNotFoundError:
+    from .strategy import RlFedAvg
 
 CFG_FIT: TypeAlias = List[Tuple[ClientProxy, FitIns]]
 RES_FIT: TypeAlias = List[Tuple[ClientProxy, FitRes]]
