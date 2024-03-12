@@ -1,12 +1,20 @@
-import sys
+import argparse
+import pathlib
 import pickle as pkl
 
 import numpy as np
-import tqdm as tqdm
+from tqdm import tqdm
 
 from .config_pendulum import *
+from ..experiment_utils import *
 
-def main(save_path: str = "baseline_results.pkl"):
+path = pathlib.Path(__file__).parent
+def main(save_path: str = "baseline_results.pkl", fixed_reset: bool = False):
+    if fixed_reset:
+        client_factory = fixed_client_factory
+    else:
+        client_factory = iid_client_factory
+
     baseline_results = []
     rng = np.random.default_rng(seed=SEED)
     for _ in range(EXPERIMENT_REPEATS):
@@ -23,13 +31,14 @@ def main(save_path: str = "baseline_results.pkl"):
 
         baseline_results.append((hist_fit, evaluation_reward))
 
-    pkl.dump(baseline_results, open(save_path, "wb"))
+    if fixed_reset:
+        save_path = "fixed_" + save_path
+    pkl.dump(baseline_results, open(os.path.join(path, save_path), "wb"))
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--fixed', action="store_true")
+args = parser.parse_args()
 if __name__ == "__main__":
-    arguments = sys.argv
-    if len(arguments) > 1:
-        path = arguments[1]
-    else:
-        path = "baseline_results.pkl"
-    main(save_path=path)
+    main(fixed_reset=args.fixed)
     

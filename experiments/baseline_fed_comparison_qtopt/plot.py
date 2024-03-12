@@ -1,6 +1,7 @@
 import os
 import pathlib
 import pickle as pkl
+import argparse
 
 import numpy as np
 import seaborn as sns
@@ -15,10 +16,14 @@ from ..visualisation import *
 
 
 path = pathlib.Path(__file__).parent
-def main():
+def main(fixed_reset: bool = False):
 
-    baseline_results = pkl.load(open(os.path.join(path,"baseline_results.pkl"), "rb"))
-    federated_results = pkl.load(open(os.path.join(path,"federated_results.pkl"), "rb"))
+    if not fixed_reset:
+        baseline_results = pkl.load(open(os.path.join(path,"baseline_results.pkl"), "rb"))
+        federated_results = pkl.load(open(os.path.join(path,"federated_results.pkl"), "rb"))
+    else:
+        baseline_results = pkl.load(open(os.path.join(path,"fixed_baseline_results.pkl"), "rb"))
+        federated_results = pkl.load(open(os.path.join(path,"fixed_federated_results.pkl"), "rb"))
 
     fig, axs = plt.subplots(1,2)
     fig.set_size_inches(11, 4)
@@ -95,8 +100,11 @@ def main():
 
     #pickle.dump(fig, open('plot.pkl', 'wb'))
     #fig.savefig(os.path.join(path,"plot.svg"), format="svg", bbox_inches="tight")
-    fig.savefig(os.path.join(path,"plot.png"), format="png", bbox_inches="tight")
-    fig.savefig(os.path.join(path,"plot.pdf"), format="pdf", bbox_inches="tight")
+    fig.savefig(os.path.join(path,"fplot.png"), format="png", bbox_inches="tight")
+    fig.savefig(os.path.join(path,"fplot.pdf"), format="pdf", bbox_inches="tight")
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--fixed', action="store_true")
+args = parser.parse_args()
 if __name__ == "__main__":
-    main()
+    main(fixed_reset=args.fixed)

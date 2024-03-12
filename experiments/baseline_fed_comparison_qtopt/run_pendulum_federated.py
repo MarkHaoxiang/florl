@@ -1,11 +1,16 @@
-import sys
+import argparse
+import logging
+import pathlib
+import pickle as pkl
 import shutil
 import copy
-import tqdm
 import pickle as pkl
 
 import numpy as np
+from tqdm import tqdm
 import flwr as fl
+from flwr.common.logger import logger
+logger.setLevel(logging.WARNING)
 from florl.common.util import aggregate_weighted_average, stateful_client
 
 from .config_pendulum import *
@@ -14,7 +19,13 @@ from ..strategy import RlFedAvg
 
 CONTEXT_WS = "florl_ws"
 
-def main(save_path: str = "federated_results.pkl"):
+path = pathlib.Path(__file__).parent
+def main(save_path: str = "federated_results.pkl", fixed_reset: bool = False):
+    if fixed_reset:
+        client_factory = fixed_client_factory
+    else:
+        client_factory = iid_client_factory
+
     strategy = RlFedAvg(
         knowledge=copy.deepcopy(client_factory.create_default_knowledge(config=config["rl"])),
         on_fit_config_fn = on_fit_config_fn,
@@ -56,16 +67,17 @@ def main(save_path: str = "federated_results.pkl"):
             num_clients = NUM_CLIENTS,
             strategy = strategy
         )
-
+        
         federated_results.append(hist)
 
-        pkl.dump(federated_results, open(save_path, "wb"))
+    if fixed_reset:
+        save_path = "fixed_" + save_path
+    pkl.dump(federated_results, open(os.path.join(path, save_path), "wb"))
 
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--fixed', action="store_true")
+args = parser.parse_args()
 if __name__ == "__main__":
-    arguments = sys.argv
-    if len(arguments) > 1:
-        path = arguments[1]
-    else:
-        path = "baseline_results.pkl"
-    main(save_path=path)
+    main(fixed_reset=args.fixed)
+    
     

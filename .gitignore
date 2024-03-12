@@ -1,6 +1,7 @@
 .vscode
 napkin.ipynb
 .vscode
+florl_ws
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

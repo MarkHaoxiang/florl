@@ -1,6 +1,8 @@
 from omegaconf import OmegaConf, DictConfig
 from florl.client.kitten.qt_opt import QTOptClientFactory
 
+from ..experiment_utils import *
+
 NUM_CLIENTS = 5
 TOTAL_ROUNDS = 100
 FRAMES_PER_ROUND = 50
@@ -49,4 +51,10 @@ def on_fit_config_fn(server_round: int):
 def on_evaluate_config_fn(server_round: int):
     return evaluate_config | {"server_round": server_round}
 
-client_factory = QTOptClientFactory(config)
+class ClientFactory(QTOptClientFactory):
+    def __init__(self, config, fixed_reset: bool = False, device: str = "cpu") -> None:
+        super().__init__(config, device)
+        if fixed_reset:
+            self.env = FixedResetWrapper(self.env)
+fixed_client_factory = ClientFactory(config, fixed_reset=True)
+iid_client_factory = ClientFactory(config)
