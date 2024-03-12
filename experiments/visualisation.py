@@ -52,7 +52,8 @@ def plot_losses(
         y1=losses_mean - losses_std * 1.96,
         y2=losses_mean + losses_std * 1.96,
         alpha=0.2,
-        color=color,
+        color="white",
+        facecolor=color,
         hatch=hatch,
     )
 
@@ -70,9 +71,11 @@ def plot_rewards(
         x=xs,
         y1=rewards_mean - rewards_std * 1.96,
         y2=rewards_mean + rewards_std * 1.96,
-        alpha=0.1,
-        color=color,
+        alpha=0.2,
+        color="white",
         hatch=hatch,
+        facecolor=color,
+        label=label
     )
 
 

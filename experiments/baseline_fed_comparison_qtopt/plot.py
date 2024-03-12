@@ -6,22 +6,25 @@ import numpy as np
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+sns.set_theme(context="paper") 
+
 from .config_pendulum import *
 from ..experiment_utils import *
 from ..visualisation import *
 
+
+
 path = pathlib.Path(__file__).parent
 def main():
+
     baseline_results = pkl.load(open(os.path.join(path,"baseline_results.pkl"), "rb"))
     federated_results = pkl.load(open(os.path.join(path,"federated_results.pkl"), "rb"))
 
     fig, axs = plt.subplots(1,2)
-    fig.set_size_inches(14,5)
+    fig.set_size_inches(11, 4)
     fig.suptitle("QTOpt/QTOptAvg on Pendulum")
 
     plt.rcParams['svg.fonttype'] = 'none'
-    sns.set_theme("paper")
-
     FEDERATED_COLOR = "blue"
     BASELINE_COLOR = "darkorange"
 
@@ -91,7 +94,9 @@ def main():
     fig.legend(handles, labels, loc='upper right')
 
     #pickle.dump(fig, open('plot.pkl', 'wb'))
-    fig.savefig(os.path.join(path,"plot.svg"), format="svg", bbox_inches="tight")
+    #fig.savefig(os.path.join(path,"plot.svg"), format="svg", bbox_inches="tight")
+    fig.savefig(os.path.join(path,"plot.png"), format="png", bbox_inches="tight")
+    fig.savefig(os.path.join(path,"plot.pdf"), format="pdf", bbox_inches="tight")
 
 if __name__ == "__main__":
     main()
