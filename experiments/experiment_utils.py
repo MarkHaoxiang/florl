@@ -1,10 +1,11 @@
 import os
-import copy
 import pickle
 from logging import INFO, WARNING
-from typing import List, Tuple, Union, TypeAlias
+from typing import Any, List, Tuple, Union, TypeAlias
 
 import torch
+import numpy as np
+import gymnasium as gym
 from flwr.common.logger import log
 from flwr.server.client_proxy import ClientProxy
 from flwr.common.typing import (
@@ -17,10 +18,8 @@ from flwr.common.typing import (
     GetPropertiesRes,
     Properties,
     Status,
-    NDArrays,
     Config,
     Parameters,
-    GetParametersIns,
 )
 
 from florl.client import FlorlClient
@@ -147,3 +146,16 @@ class MemoryClient(KittenClientWrapper):
             metrics["rb_new"] = pickle.dumps(newly_collected_frames)
         return n, metrics
 
+class FixedResetWrapper(gym.Wrapper):
+    """ Fix the reset to a single state
+    """
+    def __init__(self, env: gym.Env):
+        """ Fix the reset to a single state
+        """
+        super().__init__(env)
+        self._seed = np.random.rand()
+
+    def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None) -> Tuple[Any | dict[str, Any]]:        
+        if seed is not None:
+            self._seed = seed
+        return super().reset(seed=self._seed, options=options)
