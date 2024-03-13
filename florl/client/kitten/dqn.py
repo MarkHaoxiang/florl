@@ -10,7 +10,6 @@ from florl.client import FlorlFactory
 from florl.common import Knowledge, NumPyKnowledge
 from florl.client.kitten import KittenClient
 
-
 class DQNKnowledge(NumPyKnowledge):
     def __init__(self, critic: kitten.nn.Critic) -> None:
         super().__init__(["critic", "critic_target"])

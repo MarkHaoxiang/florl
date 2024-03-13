@@ -119,3 +119,4 @@ class GymClient(FlorlClient, ABC):
         self._seed = seed
 
         self._env.reset(seed=self._seed)
+        self._env.action_space.seed(seed=self._seed)

@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Tuple, List
+from typing import Callable, Tuple
 from logging import WARNING
 
 from flwr.common.logger import log
@@ -53,7 +53,7 @@ class RlFedAvg(FedAvg, FlorlStrategy):
 
         # ... Custom ...
         # Split FitRes into Modules
-        shards_registry: Dict[str, List[Tuple[KnowledgeShard, int]]] = {}
+        shards_registry: dict[str, list[Tuple[KnowledgeShard, int]]] = {}
         for _, fit_res in results:
             fit_res: FitRes = fit_res
             shards = Knowledge.unpack(fit_res.parameters)
@@ -62,7 +62,7 @@ class RlFedAvg(FedAvg, FlorlStrategy):
                     shards_registry[shard.name] = []
                 shards_registry[shard.name].append((shard, fit_res.num_examples))
         # Combine each module individually
-        aggregated_shards: Dict[str, KnowledgeShard] = {}
+        aggregated_shards: dict[str, KnowledgeShard] = {}
         for name, shards in shards_registry.items():
             if self.inplace:
                 raise NotImplementedError("Inplace not tested.")
@@ -94,7 +94,7 @@ class RlFedAvg(FedAvg, FlorlStrategy):
 
     def evaluate(
         self, server_round: int, parameters: Parameters
-    ) -> Tuple[float, Dict[str, Scalar]] | None:
+    ) -> Tuple[float, dict[str, Scalar]] | None:
         """Evaluate model parameters using an evaluation function"""
         if self._evaluate_fn is None:
             return None
