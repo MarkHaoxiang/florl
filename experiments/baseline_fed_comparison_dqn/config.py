@@ -1,10 +1,10 @@
 from omegaconf import OmegaConf, DictConfig
-from florl.client.kitten.qt_opt import QTOptClientFactory
+from florl.client.kitten.dqn import DQNClientFactory
 
 from ..experiment_utils import *
 
 NUM_CLIENTS = 5
-TOTAL_ROUNDS = 150
+TOTAL_ROUNDS = 400
 FRAMES_PER_ROUND = 50
 EXPERIMENT_REPEATS = 20
 SEED = 0
@@ -12,7 +12,7 @@ SEED = 0
 config = DictConfig({
     "rl": {
         "env": {
-            "name": "Pendulum-v1"
+            "name": "Acrobot-v1"
         },
         "algorithm": {
             "gamma": 0.99,
@@ -51,7 +51,7 @@ def on_fit_config_fn(server_round: int):
 def on_evaluate_config_fn(server_round: int):
     return evaluate_config | {"server_round": server_round}
 
-class ClientFactory(QTOptClientFactory):
+class ClientFactory(DQNClientFactory):
     def __init__(self, config, fixed_reset: bool = False, device: str = "cpu") -> None:
         super().__init__(config, device)
         if fixed_reset:

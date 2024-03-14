@@ -96,7 +96,7 @@ class QTOptClient(KittenClient):
     # Algorithm
     def build_algorithm(self) -> None:
         self._cfg.get("algorithm", {}).pop("critic", None)
-        self._algorithm = QTOpt(
+        self._algorithm = QTOptProx(
             critic_1_network=self._knowl.critic_1.net,
             critic_2_network=self._knowl.critic_2.net,
             obs_space=self._env.observation_space,
