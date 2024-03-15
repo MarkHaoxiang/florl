@@ -12,7 +12,7 @@ Hao Xiang Li
 - - Proposed motivation (and prototyped) the experiment for sending different modules of TD3.
 - - Proximal FRL experiments
 - ROS Flower RL
-- - Designed architecture (Both FL and FRL)
+- - Proposed and designed architecture (Both FL and FRL)
 - - Implemented FL classifer for data downloading, publishing and substantial section of client, launch script. Implemented server, evaluator, and classifier.
 - - Implemented FeatureLabelPair, FloatTensor, Transition, PolicyService, SampleFeatureLabelPair, SampleTransition and related Python utilities.
 - - Implemented dual thread approach for bridging ROS and Flower.
