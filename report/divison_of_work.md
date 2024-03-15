@@ -4,17 +4,28 @@ Hao Xiang Li
 - Florl Library
 - - Proposed and designed library
 - - Design and implementation of Knowledge, KnowledgeShard and related tests.
-- - Design and implementation of FlorlClient abstractions. Implementation of all clients, including GymClient, KittenClient
+- - Design and implementation of FlorlClient abstractions. Implementation of all clients, including GymClient, KittenClient, KittenClientWrapper, FlorlStrategy etc.
 - - Implementing all FRL algorithms (QTOptAvg, DQNAvg and TD3Avg) including Prox versions.
 - Federated Reinforcement Learning Experiments
 - - Entirety of federated vs baseline comparisons (DQNAvg, QTOptAvg)
 - - Entirety of data heterogeneity experiments and visualisations
 - - Proposed motivation (and prototyped) the experiment for sending different modules of TD3.
 - - Proximal FRL experiments
+- - Adapted FedAvg to florl with RlFedAvg. 
+- - Implemented utilities. FixedResetWrapper. MemoryClient. Centralized evaluation. 
 - ROS Flower RL
 - - Proposed and designed architecture (Both FL and FRL)
 - - Implemented FL classifer for data downloading, publishing and substantial section of client, launch script. Implemented server, evaluator, and classifier.
 - - Implemented FeatureLabelPair, FloatTensor, Transition, PolicyService, SampleFeatureLabelPair, SampleTransition and related Python utilities.
 - - Implemented dual thread approach for bridging ROS and Flower.
-- - Implemented FRL gym_controller, C++ replay_buffer, and sections of RosKittenClient (parts of train function, and sample_request)
+- - Implemented FRL gym_controller, C++ replay_buffer, and sections of RosKittenClient (parts of train function, and sample_request) Implemented placeholder utilities and tested.
 
+Zejun Chen
+- Federated Reinforcement Learning Experiments
+- - Packaged experiment visualisation utilities. get_properties utilities. EvalReplayFedAvg (alternative to MemoryClient)
+- - Designed details and ran experiment TD3 module averaging
+- ROS Flower RL
+- - Implemented initial prototype for client and helped with related launch scripts.
+- - Implemented ROS-Flower bridge by replacing client-server requests with ROS timer callbacks
+- - Implemented frl_client, frl_policy, and the ros-dqn stack.
+- - FRL task integration work and testing
