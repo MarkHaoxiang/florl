@@ -19,6 +19,7 @@ Hao Xiang Li
 - - Implemented FeatureLabelPair, FloatTensor, Transition, PolicyService, SampleFeatureLabelPair, SampleTransition and related Python utilities.
 - - Implemented dual thread approach for bridging ROS and Flower.
 - - Implemented FRL gym_controller, C++ replay_buffer, and sections of RosKittenClient (parts of train function, and sample_request) Implemented placeholder utilities and tested.
+- - Pair programming to help debug DQN_client stack
 
 Zejun Chen
 - Federated Reinforcement Learning Experiments
