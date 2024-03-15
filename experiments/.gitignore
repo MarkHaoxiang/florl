@@ -2,3 +2,6 @@ napkin.ipynb
 florl_ws
 results
 *.pkl
+*.pdf
+*.tar.xz
+td3_results
