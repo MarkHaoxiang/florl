@@ -1,5 +1,5 @@
 Hao Xiang Li
-- Report writeup - entire report and all analysis, including appendix. An edit history can be provided on request.
+- Report writeup - entire report, including appendix. An edit history can be provided on request.
 - Report figures and tables: all figures, tables and visualisations.
 - Florl Library
 - - Proposed and designed library
