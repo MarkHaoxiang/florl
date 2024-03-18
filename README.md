@@ -2,6 +2,8 @@
 
 Training federated reinforcement learning with Flower.
 
+This branch is a snapshot from 15/03/2024, for Xavier Chen's submission.
+
 ## Project
 
 Together with https://github.com/MarkHaoxiang/ros2_flower_rl, Forms part of my Federated Learning course project for Part II of the Computer Science Tripos at Cambridge.
