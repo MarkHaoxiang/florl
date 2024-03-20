@@ -22,7 +22,7 @@ class FedAvg(strategy.FedAvg, FlorlStrategy):
     """Custom FedAvg with adaptation to Florl specific features"""
 
     def __init__(
-        self, knowledge: Knowledge, evaluate_fn: Callable | None = None, *args, **kwargs
+        self, knowledge: Knowledge, *args, evaluate_fn: Callable | None = None, **kwargs
     ):
         """Custom FedAvg with adaptation to Florol specific features
 
@@ -31,7 +31,7 @@ class FedAvg(strategy.FedAvg, FlorlStrategy):
             knowledge (Knowledge): Knowledge representation used by the agent.
             args, kwargs (Any): Pass in arguments to FedAvg
         """
-        FedAvg.__init__(self, *args, **kwargs)
+        strategy.FedAvg.__init__(self, *args, **kwargs)
         FlorlStrategy.__init__(self, knowledge)
         self._evaluate_fn = evaluate_fn
 

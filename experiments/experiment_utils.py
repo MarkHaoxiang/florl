@@ -83,7 +83,10 @@ def get_properties(self, ins: GetPropertiesIns) -> GetPropertiesRes:
 
 
 class EvalReplayFedAvg(RlFedAvg):
-    """Fed Average which also stores replay buffers (objects) to History"""
+    """Fed Average which also stores replay buffers (objects) to History
+    
+    Deprecated. Use memory client instead.
+    """
 
     def aggregate_evaluate(
         self,
