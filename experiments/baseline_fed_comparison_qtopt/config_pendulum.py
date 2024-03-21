@@ -4,7 +4,7 @@ from florl.client.kitten.qt_opt import QTOptClientFactory
 from ..experiment_utils import *
 
 NUM_CLIENTS = 5
-TOTAL_ROUNDS = 150
+TOTAL_ROUNDS = 200 
 FRAMES_PER_ROUND = 50
 EXPERIMENT_REPEATS = 20
 SEED = 0
