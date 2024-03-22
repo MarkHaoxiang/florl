@@ -20,6 +20,11 @@ Hao Xiang Li
 - - Implemented dual thread approach for bridging ROS and Flower.
 - - Implemented FRL gym_controller, C++ replay_buffer, and sections of RosKittenClient (parts of train function, and sample_request) Implemented placeholder utilities and tested.
 - - Pair programming to help debug DQN_client stack
+- Additional work completed in requested approved extension:
+- - Modularised ROS2-Flower bridge
+- - Fixed seeding bug, and re-run centralised-federated experiments with longer rounds.
+- - Completed ROS2 FRL framework (fixed deadlock bug) and train DQN.
+- - Edits to report
 
 Zejun Chen
 - Federated Reinforcement Learning Experiments
