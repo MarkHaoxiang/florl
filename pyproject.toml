@@ -1,0 +1,18 @@
+[project]
+name = "florl"
+version = "0.1.0"
+description = "florl is a federated reinforcement learning framework."
+authors = [
+    { name = "Hao Xiang Li", email = "mark.haoxiang@gmail.com" },
+    { name = "Xavier Chen", email = "zc344@cam.ac.uk" },
+]
+readme = "README.md"
+requires-python = ">=3.12,<3.13" # Flwr breaks currently on 3.13
+dependencies = ["flwr>=1.14.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["mypy>=1.14.1", "pytest>=8.3.4", "ruff>=0.9.3"]
