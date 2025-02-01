@@ -4,7 +4,7 @@ from expecttest import assert_expected_inline
 import torch
 import torch.nn as nn
 
-from florl.common import get_torch_parameters, load_torch_parameters
+from florl.common import get_torch_parameters, load_model_parameters
 from .util import initialise_parameters_to_float
 
 
@@ -28,7 +28,7 @@ def test_torch_parameters():
     # Verify tensors
     assert len(parameters.tensors) == 1
     reference_state_dict = model.state_dict()
-    load_torch_parameters(model, parameters)
+    load_model_parameters(model, parameters)
     for k, v in model.state_dict().items():
         assert k in reference_state_dict
         assert torch.equal(v, reference_state_dict[k])
@@ -51,7 +51,7 @@ OrderedDict([('fc1.weight',
     model_load = Model()
     initialise_parameters_to_float(model_load, 0.0)
 
-    load_torch_parameters(
+    load_model_parameters(
         model, get_torch_parameters(model_load), ignore_prefix=("fc1",)
     )
 

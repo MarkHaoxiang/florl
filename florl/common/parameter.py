@@ -26,6 +26,8 @@ def get_torch_parameters(
         state_dict = data
     elif isinstance(data, Module):
         state_dict = data.state_dict()
+    else:
+        raise ValueError()
     state_dict = _filter_out_prefix(state_dict, ignore_prefix)
     buffer = BytesIO()
     torch.save(obj=state_dict, f=buffer)
@@ -33,7 +35,24 @@ def get_torch_parameters(
 
 
 def load_torch_parameters(
-    module: Module, parameters: Parameters, ignore_prefix: tuple[str, ...] = ()
+    parameters: Parameters, ignore_prefix: tuple[str, ...] = ()
+) -> StateDict:
+    if parameters.tensor_type != TENSOR_TYPE:
+        raise ValueError(
+            f"Unexpected parameter type {parameters.tensor_type}, expected a {TENSOR_TYPE}"
+        )
+    buffer = BytesIO(initial_bytes=b"".join(parameters.tensors))
+    buffer.seek(0)
+    state_dict = _filter_out_prefix(
+        torch.load(f=buffer, weights_only=True), ignore_prefix
+    )
+    return state_dict
+
+
+def load_model_parameters(
+    model: Module,
+    data: Parameters | StateDict,
+    ignore_prefix: tuple[str, ...] = (),
 ) -> None:
     """Loads serialized PyTorch parameters into a given module.
 
@@ -44,16 +63,14 @@ def load_torch_parameters(
     Raises:
         ValueError: If the `tensor_type` in `parameters` does not match the expected type torch.state_dict).
     """
-    if parameters.tensor_type != TENSOR_TYPE:
-        raise ValueError(
-            f"Unexpected parameter type {parameters.tensor_type}, expected a {TENSOR_TYPE}"
-        )
-    buffer = BytesIO(initial_bytes=b"".join(parameters.tensors))
-    buffer.seek(0)
-    state_dict = _filter_out_prefix(
-        torch.load(f=buffer, weights_only=True), ignore_prefix
-    )
-    module.load_state_dict(state_dict=state_dict, strict=False)
+    if isinstance(data, dict):
+        state_dict = data
+    elif isinstance(data, Parameters):
+        state_dict = load_torch_parameters(data)
+    else:
+        raise ValueError()
+    state_dict = _filter_out_prefix(state_dict, ignore_prefix)
+    model.load_state_dict(state_dict=state_dict, strict=False)
 
 
 def _filter_out_prefix(state_dict: StateDict, prefix: tuple[str, ...]) -> StateDict:
