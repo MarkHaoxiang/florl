@@ -17,7 +17,7 @@ from flwr.common.typing import (
     Scalar,
 )
 
-from florl.common.knowledge import Knowledge
+from florl.common.parameter import Knowledge
 
 
 class FlorlClient(fl.client.Client, ABC):
