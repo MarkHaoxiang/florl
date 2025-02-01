@@ -1,18 +1,15 @@
 # Florl (*floral*)
 
-Training federated reinforcement learning with Flower.
+florl is an open-source framework to develop federated reinforcement learning (FRL) applications.
 
-## Project
+Our framework builds upon [Flower](https://github.com/adap/flower) and [TorchRL](https://github.com/pytorch/rl). 
 
-Together with https://github.com/MarkHaoxiang/ros2_flower_rl, forms part of my Federated Learning course project for Part II of the Computer Science Tripos at Cambridge.
+This project is in active development. Check out a [report](https://github.com/MarkHaoxiang/florl/blob/l361-submission/report/fl_florl_report.pdf) that detailed a past version and the original motivations for this project.
 
-As only I have requested a project extension, please see branch `zc344-submission` for an older snapshot of the codebase on the deadline for Xavier's submission. The newer commits to `main`, up to the deadline of `22/03/2024`, contains only my work.
-
-See https://github.com/MarkHaoxiang/florl/tree/main/report for division of work and report.
-
+Currently, this project is in active development and not yet functional. However, branch `l361-submission` contains a suite of FRL experiments that may be useful for reference.
 
 ## Installation
 
-Clone this repository, and then `pip install .`
+### Development
 
-You will also need to clone and install from source https://github.com/MarkHaoxiang/kitten and https://github.com/adap/flower.
+We use [uv](https://github.com/astral-sh/uv) to manage local development environments.
