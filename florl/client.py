@@ -15,7 +15,13 @@ from flwr.common import (
 import torch.nn as nn
 from torchrl.envs import EnvBase
 
-from florl.common import StateDict, get_torch_parameters, load_torch_parameters
+from florl.common import (
+    StateDict,
+    get_torch_parameters,
+    load_torch_parameters,
+    torch_to_numpy_parameters,
+    numpy_to_torch_parameters,
+)
 from florl.common.util import fit_ok
 
 
@@ -90,6 +96,38 @@ class FlorlClient(fl.client.Client, ABC):
                 parameters=Parameters(tensor_type="", tensors=[]),
                 metrics={},
             )
+
+    def to_numpy(self) -> fl.client.Client:
+        """Converts to a client which communicates with the server via Numpy array parameters.
+
+        This is useful to interface with the default set of Flower strategies.
+        """
+        return _NumPyFlorlWrapper(client=self)
+
+
+class _NumPyFlorlWrapper(fl.client.Client):
+    def __init__(self, client: FlorlClient):
+        super().__init__()
+        self._client = client
+
+    def get_properties(self, ins):
+        return self._client.get_properties(ins)
+
+    def get_parameters(self, ins):
+        res = self._client.get_parameters(ins)
+        res.parameters = torch_to_numpy_parameters(res.parameters)
+        return res
+
+    def fit(self, ins):
+        ins.parameters = numpy_to_torch_parameters(
+            ins.parameters, self._client.parameter_container.state_dict()
+        )
+        res = self._client.fit(ins)
+        res.parameters = torch_to_numpy_parameters(res.parameters)
+        return res
+
+    def evaluate(self, ins):
+        return self._client.evaluate(ins)
 
 
 class EnvironmentClient(FlorlClient):
