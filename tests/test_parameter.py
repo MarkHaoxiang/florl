@@ -66,3 +66,7 @@ OrderedDict([('fc1.weight',
              ('fc2.weight', tensor([[0., 0., 0.]])),
              ('fc2.bias', tensor([0.]))])""",
     )
+
+
+def test_torch_numpy_conversion():
+    pass
