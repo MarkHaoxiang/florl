@@ -1,10 +1,16 @@
 from pprint import pformat
 
 from expecttest import assert_expected_inline
+import numpy as np
 import torch
 import torch.nn as nn
 
-from florl.common import get_torch_parameters, load_model_parameters
+from florl.common import (
+    get_torch_parameters,
+    load_model_parameters,
+    torch_to_numpy,
+    numpy_to_torch,
+)
 from .util import initialise_parameters_to_float
 
 
@@ -69,4 +75,20 @@ OrderedDict([('fc1.weight',
 
 
 def test_torch_numpy_conversion():
-    pass
+    model = Model()
+    state_dict = model.state_dict()
+    weights = torch_to_numpy(state_dict)
+
+    for (_, tensor), numpy_array in zip(sorted(state_dict.items()), weights):
+        assert np.array_equal(numpy_array, tensor.cpu().numpy())
+
+    state_dict["should_ignore"] = None
+    weights_comparison = torch_to_numpy(state_dict)
+    assert all((np.array_equal(x, y) for x, y in zip(weights, weights_comparison)))
+
+    model.load_state_dict(
+        numpy_to_torch(weights_comparison, state_dict, inplace=False), strict=False
+    )
+
+    for (_, tensor), numpy_array in zip(sorted(state_dict.items()), weights):
+        assert np.array_equal(numpy_array, tensor.cpu().numpy())

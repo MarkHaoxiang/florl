@@ -3,6 +3,10 @@ from florl.common.parameter import (
     get_torch_parameters,
     load_torch_parameters,
     load_model_parameters,
+    torch_to_numpy,
+    torch_to_numpy_parameters,
+    numpy_to_torch,
+    numpy_to_torch_parameters,
 )
 
 __all__ = [
@@ -10,4 +14,8 @@ __all__ = [
     "get_torch_parameters",
     "load_torch_parameters",
     "load_model_parameters",
+    "torch_to_numpy",
+    "torch_to_numpy_parameters",
+    "numpy_to_torch",
+    "numpy_to_torch_parameters",
 ]
