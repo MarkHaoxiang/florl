@@ -101,6 +101,9 @@ class FlorlClient(fl.client.Client, ABC):
         """Converts to a client which communicates with the server via Numpy array parameters.
 
         This is useful to interface with the default set of Flower strategies.
+
+        Returns:
+            _NumPyFlorlWrapper: A client which uses np.ndarray parameters.
         """
         return _NumPyFlorlWrapper(client=self)
 

@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12,<3.13" # Flwr breaks currently on 3.13
 dependencies = [
     "expecttest>=0.3.0",
-    "flwr>=1.14.0",
+    "flwr>=1.15.0",
     "ipykernel>=6.29.5",
     "torch>=2.6.0",
     "torchrl>=0.6.0",
@@ -22,3 +22,10 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = ["mypy>=1.14.1", "pytest>=8.3.4", "ruff>=0.9.3", "expecttest>=0.3.0"]
+
+[tool.uv.workspace]
+members = [".", "examples/*"]
+
+[tool.uv.sources]
+florl = { workspace = true }
+
