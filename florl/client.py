@@ -22,7 +22,7 @@ from florl.common import (
     torch_to_numpy_parameters,
     numpy_to_torch_parameters,
 )
-from florl.common.util import fit_ok
+from florl.common.res import fit_ok
 
 
 class FlorlClient(fl.client.Client, ABC):
