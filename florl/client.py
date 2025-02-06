@@ -32,8 +32,8 @@ class FlorlClient(fl.client.Client, ABC):
     # Overide these methods
     # =========
 
-    @abstractmethod
     @property
+    @abstractmethod
     def parameter_container(self) -> nn.Module:
         """Returns a module containing all parameters available in the client. This encapsulates policies, values, loss modules etc.
 

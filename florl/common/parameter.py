@@ -100,7 +100,7 @@ def torch_to_numpy(state_dict: StateDict) -> list[np.ndarray]:
                           in the state dictionary, sorted by the keys (parameter names).
     """
     return [
-        v.cpu().numpy()
+        v.numpy(force=True)
         for _, v in sorted(state_dict.items(), key=lambda x: x[0])
         if isinstance(v, torch.Tensor)
     ]

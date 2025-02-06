@@ -10,7 +10,7 @@ from flwr.client import ClientApp
 from flwr.common import Context
 from florl.client import EnvironmentClient
 
-from fedppo.task import make_env, make_dqn_modules
+from fedppo.task import make_env, make_ppo_modules
 
 
 # Define Flower Client and client_fn
@@ -52,7 +52,6 @@ class PPOClient(EnvironmentClient):
             gamma=gae_gamma,
             lmbda=gae_lmbda,
             value_network=value_network,
-            advantage_key=True,
         )
 
         self.replay_buffer = ReplayBuffer(
@@ -85,7 +84,7 @@ class PPOClient(EnvironmentClient):
                     self.optim.zero_grad()
 
                     minibatch: TensorDict = self.replay_buffer.sample()
-                    loss_vals = self.loss()
+                    loss_vals = self.loss(minibatch)
                     loss_value = (
                         loss_vals["loss_objective"]
                         + loss_vals["loss_critic"]
@@ -99,18 +98,14 @@ class PPOClient(EnvironmentClient):
 
                     self.optim.step()
 
-        return (self.total_frames, self.loss.state_dict(), {})  # TODO mark: Metrics
+        return (self.total_frames, self.loss.state_dict(), {})
 
 
 def client_fn(context: Context):
-    # Load model and data
-    # partition_id = context.node_config["partition-id"]
-    # num_partitions = context.node_config["num-partitions"]
     env = make_env()
-    qvalue_actor = make_dqn_modules(env)
+    actor, value = make_ppo_modules(env)
 
-    # Return Client instance
-    raise PPOClient(env=env, qvalue_actor=qvalue_actor)
+    return PPOClient(env=env, actor_network=actor, value_network=value).to_numpy()
 
 
 # Flower ClientApp
