@@ -13,8 +13,9 @@ dependencies = [
     "flwr[simulation]>=1.15.0",
     "ipykernel>=6.29.5",
     "numpy<2.0",
+    "ray>=2.42.0",
     "torch>=2.6.0",
-    "torchrl>=0.6.0",
+    "torchrl[gym_continuous]>=0.6.0",
 ]
 
 [build-system]

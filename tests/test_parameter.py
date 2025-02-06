@@ -11,7 +11,7 @@ from florl.common import (
     torch_to_numpy,
     numpy_to_torch,
 )
-from .util import initialise_parameters_to_float
+from florl._dev.tests import initialise_parameters_to_float
 
 
 class Model(nn.Module):

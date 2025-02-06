@@ -262,7 +262,7 @@ wheels = [
 
 [[package]]
 name = "fedppo"
-version = "1.0.0"
+version = "0.1.0"
 source = { editable = "examples/fedppo" }
 dependencies = [
     { name = "florl" },
@@ -303,8 +303,9 @@ dependencies = [
     { name = "flwr" },
     { name = "ipykernel" },
     { name = "numpy" },
+    { name = "ray" },
     { name = "torch" },
-    { name = "torchrl" },
+    { name = "torchrl", extra = ["gym-continuous"] },
 ]
 
 [package.dev-dependencies]
@@ -321,8 +322,9 @@ requires-dist = [
     { name = "flwr", extras = ["simulation"], specifier = ">=1.15.0" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "numpy", specifier = "<2.0" },
+    { name = "ray", specifier = ">=2.42.0" },
     { name = "torch", specifier = ">=2.6.0" },
-    { name = "torchrl", specifier = ">=0.6.0" },
+    { name = "torchrl", extras = ["gym-continuous"], specifier = ">=0.6.0" },
 ]
 
 [package.metadata.requires-dev]
