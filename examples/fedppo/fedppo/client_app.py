@@ -100,12 +100,27 @@ class PPOClient(EnvironmentClient):
 
         return (self.total_frames, self.loss.state_dict(), {})
 
+    def evaluation(self, parameters, config):
+        self.loss.load_state_dict(parameters)
 
-def client_fn(context: Context):
+        max_steps: int = config.get("max_steps", 500)
+        rollout: TensorDict = self._env.rollout(
+            max_steps=max_steps,
+            policy=self.actor,
+        )
+        episode_reward = rollout.get(("next", "reward")).sum(dim=-1).mean().item()
+        return max_steps, {"episode_reward": episode_reward}
+
+
+def _client_fn(context: Context):
     env = make_env()
     actor, value = make_ppo_modules(env)
 
-    return PPOClient(env=env, actor_network=actor, value_network=value).to_numpy()
+    return PPOClient(env=env, actor_network=actor, value_network=value)
+
+
+def client_fn(context: Context):
+    return _client_fn(context).to_numpy()
 
 
 # Flower ClientApp

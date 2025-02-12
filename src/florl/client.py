@@ -8,7 +8,8 @@ from flwr.common import (
     FitRes,
     GetParametersIns,
     GetParametersRes,
-    Parameters,
+    EvaluateIns,
+    EvaluateRes,
     Status,
     Metrics,
 )
@@ -22,7 +23,7 @@ from florl.common import (
     torch_to_numpy_parameters,
     numpy_to_torch_parameters,
 )
-from florl.common.res import fit_ok
+from florl.common.res import evaluate_ok, fit_ok
 
 
 class FlorlClient(fl.client.Client, ABC):
@@ -71,6 +72,30 @@ class FlorlClient(fl.client.Client, ABC):
         """
         raise NotImplementedError()
 
+    def evaluation(self, parameters: StateDict, config: Config) -> tuple[int, Metrics]:
+        """Evaluates the client's model using the provided parameters and configuration.
+
+        This method is responsible for evaluating the model's performance on the client's local data.
+        It uses the provided `parameters` to update the model and returns evaluation metrics.
+
+        Args:
+            parameters (StateDict): A dictionary containing the model parameters to be used
+                                for evaluation. These parameters are typically provided by
+                                the server.
+            config (Config): A dictionary containing configuration parameters for the evaluation
+                            process (e.g., number of environment steps).
+
+        Returns:
+            tuple[int, Metrics]: A tuple containing:
+                - `int`: The number of evaluation examples used during the evaluation process.
+                - `Metrics`: A dictionary of metrics (e.g., loss, accuracy) collected during
+                            the evaluation process.
+
+        Raises:
+            NotImplementedError: If the method is not implemented by the subclass.
+        """
+        raise NotImplementedError()
+
     # =========
 
     def get_parameters(self, ins: GetParametersIns) -> GetParametersRes:
@@ -85,17 +110,22 @@ class FlorlClient(fl.client.Client, ABC):
         try:
             ignore_prefix = ins.config.get("ignore_prefix", ())
             assert isinstance(ignore_prefix, tuple)
-            state_dict = load_torch_parameters(ins.parameters)
+            state_dict = load_torch_parameters(ins.parameters, ignore_prefix)
             num_examples, state_dict, metrics = self.train(state_dict, ins.config)
             parameters = get_torch_parameters(state_dict, ignore_prefix=ignore_prefix)
             return fit_ok(num_examples, parameters, metrics)
         except NotImplementedError:
-            return FitRes(
-                status=Status(Code.FIT_NOT_IMPLEMENTED, "Not Implemented"),
-                num_examples=0,
-                parameters=Parameters(tensor_type="", tensors=[]),
-                metrics={},
-            )
+            return super().fit(ins)
+
+    def evaluate(self, ins: EvaluateIns) -> EvaluateRes:
+        try:
+            ignore_prefix = ins.config.get("ignore_prefix", ())
+            assert isinstance(ignore_prefix, tuple)
+            state_dict = load_torch_parameters(ins.parameters, ignore_prefix)
+            num_examples, metrics = self.evaluation(state_dict, ins.config)
+            return evaluate_ok(num_examples, metrics)
+        except NotImplementedError:
+            return super().evaluate(ins)
 
     def to_numpy(self) -> fl.client.Client:
         """Converts to a client which communicates with the server via Numpy array parameters.
@@ -130,6 +160,9 @@ class _NumPyFlorlWrapper(fl.client.Client):
         return res
 
     def evaluate(self, ins):
+        ins.parameters = numpy_to_torch_parameters(
+            ins.parameters, self._client.parameter_container.state_dict()
+        )
         return self._client.evaluate(ins)
 
 
