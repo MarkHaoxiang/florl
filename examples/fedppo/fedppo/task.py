@@ -1,15 +1,15 @@
 from collections.abc import Sequence
 
 import torch.nn as nn
-from torch.distributions import Categorical
+from torch.distributions import OneHotCategorical
 from torchrl.envs import EnvBase, GymEnv
 from torchrl.data.tensor_specs import CategoricalBox
 from torchrl.modules import MLP, ProbabilisticActor, ValueOperator
 from tensordict.nn import TensorDictModule, InteractionType
 
 
-def make_env():
-    return GymEnv("Acrobot-v1")
+def make_env(env_name: str):
+    return GymEnv(env_name)
 
 
 def make_ppo_modules(
@@ -42,7 +42,7 @@ def make_ppo_modules(
         module=actor_model,
         in_keys=["logits"],
         out_keys=[env.action_key],
-        distribution_class=Categorical,
+        distribution_class=OneHotCategorical,
         return_log_prob=True,
         log_prob_key="sample_log_prob",
         default_interaction_type=InteractionType.RANDOM,

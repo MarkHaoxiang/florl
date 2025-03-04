@@ -1,34 +1,55 @@
+from typing import TypedDict
+
 import torch
 from torch import nn
 from tensordict import TensorDict
-from torchrl.envs import EnvBase
+from torchrl.envs import EnvBase, TransformedEnv, RewardSum
 from torchrl.collectors import SyncDataCollector
-from torchrl.objectives.ppo import ClipPPOLoss, GAE
+from torchrl.objectives.ppo import ClipPPOLoss
+from torchrl.objectives import ValueEstimators
 from torchrl.data import ReplayBuffer, LazyTensorStorage, SamplerWithoutReplacement
 from tensordict.nn import TensorDictModule
 from flwr.client import ClientApp
 from flwr.common import Context
 from florl.client import EnvironmentClient
+from florl.common import transpose_dicts
 
 from fedppo.task import make_env, make_ppo_modules
 
 
-# Define Flower Client and client_fn
+class PPOConfig(TypedDict, total=False):
+    minibatch_size: int
+    n_minibatches: int
+    n_update_epochs: int
+    n_iterations: int
+    gae_gamma: float
+    gae_lmbda: float
+    clip_grad_norm: float
+    lr: float
+    normalize_advantage: bool
+    clip_epsilon: float
+
+
 class PPOClient(EnvironmentClient):
     def __init__(
         self,
         env: EnvBase,
         actor_network: TensorDictModule,
         value_network: TensorDictModule,
-        minibatch_size: int = 1024,
-        n_minibatches: int = 10,
+        minibatch_size: int = 128,
+        n_minibatches: int = 4,
         n_update_epochs: int = 4,
-        n_iterations: int = 1,
+        n_iterations: int = 10,
         gae_gamma: float = 0.99,
         gae_lmbda: float = 0.95,
         clip_grad_norm: float = 1.0,
-        lr: float = 3e-4,
+        lr: float = 2.5e-4,
+        normalize_advantage: bool = True,
+        clip_epsilon: float = 0.2,
     ):
+        env = TransformedEnv(
+            env, RewardSum(in_keys=env.reward_keys, out_keys=["episode_reward"])
+        )
         super().__init__(env)
         self.actor = actor_network
         self.critic = value_network
@@ -44,15 +65,16 @@ class PPOClient(EnvironmentClient):
         self.loss = ClipPPOLoss(
             actor_network,
             value_network,
+            normalize_advantage=normalize_advantage,
+            clip_epsilon=clip_epsilon,
+            loss_critic_type="l2",
         )
+        self.loss.make_value_estimator(
+            ValueEstimators.GAE, gamma=gae_gamma, lmbda=gae_lmbda
+        )
+        self.loss.to(self.device)
 
         self.optim = torch.optim.Adam(self.loss.parameters(), lr=lr)
-
-        self.advantage = GAE(
-            gamma=gae_gamma,
-            lmbda=gae_lmbda,
-            value_network=value_network,
-        )
 
         self.replay_buffer = ReplayBuffer(
             storage=LazyTensorStorage(self.batch_size, device=self.device),
@@ -64,7 +86,7 @@ class PPOClient(EnvironmentClient):
     def parameter_container(self) -> nn.Module:
         return self.loss
 
-    def train(self, parameters, config):
+    def train(self, parameters, config, verbose: bool = False):
         self.loss.load_state_dict(parameters)
 
         collector = SyncDataCollector(
@@ -75,30 +97,70 @@ class PPOClient(EnvironmentClient):
             total_frames=self.total_frames,
         )
 
+        metrics: list[dict] = []
+
         for sampling_td in collector:
-            self.advantage(sampling_td)
+            epoch_metrics = {}
+            with torch.no_grad():
+                self.loss.value_estimator(
+                    sampling_td,
+                    params=self.loss.critic_network_params,
+                    target_params=self.loss.target_critic_network_params,
+                )
+
+            dones = sampling_td.get(("next", "done"))
+            rewards = sampling_td.get(("next", self._env.reward_key))
+            episode_rewards = (
+                sampling_td.get(("next", "episode_reward"))[dones]
+                if dones.any()
+                else torch.zeros(())
+            )
+            epoch_metrics.update(
+                {
+                    "train/reward/reward_mean": rewards.mean().item(),
+                    "train/reward/reward_min": rewards.min().item(),
+                    "train/reward/reward_max": rewards.max().item(),
+                    "train/reward/episode_reward_mean": episode_rewards.mean().item(),
+                    "train/reward/episode_reward_min": episode_rewards.min().item(),
+                    "train/reward/episode_reward_max": episode_rewards.max().item(),
+                }
+            )
+
             self.replay_buffer.extend(sampling_td.reshape(-1))
 
+            loss_metrics: dict[str, float] = {}
             for _ in range(self.n_update_epochs):
                 for _ in range(self.n_minibatches):
                     self.optim.zero_grad()
 
                     minibatch: TensorDict = self.replay_buffer.sample()
+
                     loss_vals = self.loss(minibatch)
-                    loss_value = (
+                    total_loss = (
                         loss_vals["loss_objective"]
                         + loss_vals["loss_critic"]
                         + loss_vals["loss_entropy"]
                     )
 
-                    loss_value.backward()
+                    for k, v in loss_vals.items():
+                        if v is not None:
+                            loss_metrics[f"train/loss/{k}"] = (
+                                loss_metrics.get(k, 0) + v.item() / self.n_update_epochs
+                            )
+
+                    total_loss.backward()
                     torch.nn.utils.clip_grad_norm_(
                         self.loss.parameters(), max_norm=self.clip_grad_norm
                     )
 
                     self.optim.step()
 
-        return (self.total_frames, self.loss.state_dict(), {})
+            collector.update_policy_weights_()
+
+            epoch_metrics.update(loss_metrics)
+            metrics.append(epoch_metrics)
+
+        return (self.total_frames, self.loss.state_dict(), transpose_dicts(metrics))
 
     def evaluation(self, parameters, config):
         self.loss.load_state_dict(parameters)
@@ -108,20 +170,24 @@ class PPOClient(EnvironmentClient):
             max_steps=max_steps,
             policy=self.actor,
         )
-        episode_reward = rollout.get(("next", "reward")).sum(dim=-1).mean().item()
+        episode_reward = rollout.get(("next", "reward")).sum().item()
         return max_steps, {"episode_reward": episode_reward}
 
 
-def _client_fn(context: Context):
-    env = make_env()
+def client_fn(context: Context, env_name: str, client_config: PPOConfig):
+    env = make_env(env_name)
     actor, value = make_ppo_modules(env)
 
-    return PPOClient(env=env, actor_network=actor, value_network=value)
-
-
-def client_fn(context: Context):
-    return _client_fn(context).to_numpy()
+    return PPOClient(
+        env=env, actor_network=actor, value_network=value, **client_config
+    ).to_numpy()
 
 
 # Flower ClientApp
-app = ClientApp(client_fn)
+
+
+def app(cfg):
+    def _client_fn(context: Context):
+        return client_fn(context, env_name="CartPole-v1", client_config=cfg)
+
+    return ClientApp(client_fn=_client_fn)

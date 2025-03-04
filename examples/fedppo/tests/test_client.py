@@ -1,4 +1,5 @@
-from flwr.common import Context, EvaluateIns, GetParametersIns
+from flwr.common import Context, EvaluateIns, FitIns, GetParametersIns
+
 from fedppo.client_app import client_fn
 
 
@@ -19,3 +20,11 @@ def test_evaluate():
     )
 
     assert "episode_reward" in evaluate_res.metrics
+
+
+# def test_train():
+#     client = client_fn(context)
+#     client.fit(
+#         FitIns(parameters=client.get_parameters(GetParametersIns({})).parameters),
+#         config={},
+#     )

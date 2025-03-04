@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing import Self
 
 import flwr as fl
 from flwr.common import (
@@ -11,13 +14,14 @@ from flwr.common import (
     EvaluateIns,
     EvaluateRes,
     Status,
-    Metrics,
 )
 import torch.nn as nn
 from torchrl.envs import EnvBase
 
 from florl.common import (
     StateDict,
+    JSONSerializable,
+    Metrics,
     get_torch_parameters,
     load_torch_parameters,
     torch_to_numpy_parameters,
@@ -46,7 +50,7 @@ class FlorlClient(fl.client.Client, ABC):
     @abstractmethod
     def train(
         self, parameters: StateDict, config: Config
-    ) -> tuple[int, StateDict, Metrics]:
+    ) -> tuple[int, StateDict, JSONSerializable]:
         """Trains the client's model using the provided parameters and configuration.
 
         This method is responsible for performing the training loop on the client's local data.
@@ -72,7 +76,9 @@ class FlorlClient(fl.client.Client, ABC):
         """
         raise NotImplementedError()
 
-    def evaluation(self, parameters: StateDict, config: Config) -> tuple[int, Metrics]:
+    def evaluation(
+        self, parameters: StateDict, config: Config
+    ) -> tuple[int, JSONSerializable]:
         """Evaluates the client's model using the provided parameters and configuration.
 
         This method is responsible for evaluating the model's performance on the client's local data.
@@ -113,7 +119,7 @@ class FlorlClient(fl.client.Client, ABC):
             state_dict = load_torch_parameters(ins.parameters, ignore_prefix)
             num_examples, state_dict, metrics = self.train(state_dict, ins.config)
             parameters = get_torch_parameters(state_dict, ignore_prefix=ignore_prefix)
-            return fit_ok(num_examples, parameters, metrics)
+            return fit_ok(num_examples, parameters, Metrics(metrics).dump())
         except NotImplementedError:
             return super().fit(ins)
 
@@ -123,11 +129,11 @@ class FlorlClient(fl.client.Client, ABC):
             assert isinstance(ignore_prefix, tuple)
             state_dict = load_torch_parameters(ins.parameters, ignore_prefix)
             num_examples, metrics = self.evaluation(state_dict, ins.config)
-            return evaluate_ok(num_examples, metrics)
+            return evaluate_ok(num_examples, Metrics(metrics).dump())
         except NotImplementedError:
             return super().evaluate(ins)
 
-    def to_numpy(self) -> fl.client.Client:
+    def to_numpy(self) -> _NumPyFlorlWrapper[Self]:
         """Converts to a client which communicates with the server via Numpy array parameters.
 
         This is useful to interface with the default set of Flower strategies.
@@ -138,32 +144,32 @@ class FlorlClient(fl.client.Client, ABC):
         return _NumPyFlorlWrapper(client=self)
 
 
-class _NumPyFlorlWrapper(fl.client.Client):
-    def __init__(self, client: FlorlClient):
+class _NumPyFlorlWrapper[T: FlorlClient](fl.client.Client):
+    def __init__(self, client: T):
         super().__init__()
-        self._client = client
+        self.client = client
 
     def get_properties(self, ins):
-        return self._client.get_properties(ins)
+        return self.client.get_properties(ins)
 
     def get_parameters(self, ins):
-        res = self._client.get_parameters(ins)
+        res = self.client.get_parameters(ins)
         res.parameters = torch_to_numpy_parameters(res.parameters)
         return res
 
     def fit(self, ins):
         ins.parameters = numpy_to_torch_parameters(
-            ins.parameters, self._client.parameter_container.state_dict()
+            ins.parameters, self.client.parameter_container.state_dict()
         )
-        res = self._client.fit(ins)
+        res = self.client.fit(ins)
         res.parameters = torch_to_numpy_parameters(res.parameters)
         return res
 
     def evaluate(self, ins):
         ins.parameters = numpy_to_torch_parameters(
-            ins.parameters, self._client.parameter_container.state_dict()
+            ins.parameters, self.client.parameter_container.state_dict()
         )
-        return self._client.evaluate(ins)
+        return self.client.evaluate(ins)
 
 
 class EnvironmentClient(FlorlClient):
