@@ -1,14 +1,38 @@
+import os
+from typing import TypedDict
+
 from flwr.simulation import run_simulation
 import hydra
 
+from fedppo.task import TaskConfig
+from fedppo.server_app import ServerConfig
+from fedppo.client_app import PPOConfig
 from fedppo import client_app, server_app
 
 
+CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../fedppo/conf")
+
+
+class SimulationConfig(TypedDict):
+    num_supernodes: int
+
+
+class FedPPOConfig(TypedDict):
+    client: PPOConfig
+    server: ServerConfig
+    task: TaskConfig
+    simulation: SimulationConfig
+
+
 @hydra.main(config_path="conf", config_name="cartpole", version_base=None)
-def main(cfg):
+def main(cfg: FedPPOConfig):
     run_simulation(
-        server_app=server_app.app,
-        client_app=client_app.app(cfg),
-        num_supernodes=10,
+        server_app=server_app.app(cfg["server"]),
+        client_app=client_app.app(cfg["client"], cfg["task"]),
+        num_supernodes=cfg["simulation"]["num_supernodes"],
         backend_name="ray",
     )
+
+
+if __name__ == "__main__":
+    main()

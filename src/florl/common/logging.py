@@ -1,5 +1,7 @@
+from typing import Callable
+
 import json
-import flwr as fl
+from flwr.common import Metrics as FlwrMetrics, MetricsAggregationFn
 
 type JSONSerializable = (
     list[JSONSerializable] | dict[str, JSONSerializable] | str | int | float | bool
@@ -13,7 +15,7 @@ class Metrics:
         super().__init__()
         self._metrics = metrics
 
-    def dump(self) -> fl.common.Metrics:
+    def dump(self) -> FlwrMetrics:
         """
         Serialize the metrics to a JSON-encoded byte string and wrap it in a dictionary.
 
@@ -24,7 +26,7 @@ class Metrics:
         return {FLORL_RAW_METRICS: raw}
 
     @classmethod
-    def load(cls, metrics: fl.common.Metrics):
+    def load(cls, metrics: FlwrMetrics):
         """
         Deserialize the JSON-encoded metrics from a dictionary and create a Metrics instance.
 
@@ -42,6 +44,16 @@ class Metrics:
         raw = metrics[FLORL_RAW_METRICS]
         assert isinstance(raw, bytes)
         return cls(json.loads(raw))
+
+    @property
+    def metrics(self) -> JSONSerializable:
+        """
+        Getter for the metrics attribute.
+
+        Returns:
+            JSONSerializable: The stored metrics.
+        """
+        return self._metrics
 
 
 def transpose_dicts(
@@ -67,3 +79,26 @@ def transpose_dicts(
             transposed[d_key].append(d[d_key])
 
     return transposed
+
+
+def metrics_aggregation_fn(
+    fn: Callable[[list[tuple[int, JSONSerializable]]], JSONSerializable],
+) -> MetricsAggregationFn:
+    """
+    Create a metrics aggregation function.
+
+    Args:
+        fn (Callable[[list[tuple[int, JSONSerializable]]], JSONSerializable]):
+            A function that takes a list of tuples, where each tuple contains an integer
+            and JSON-serializable metrics, and returns aggregated JSON-serializable metrics.
+
+    Returns:
+        MetricsAggregationFn
+    """
+
+    def _fn(results: list[tuple[int, FlwrMetrics]]):
+        return Metrics(
+            fn([(n, Metrics.load(metrics).metrics) for n, metrics in results])
+        ).dump()
+
+    return _fn

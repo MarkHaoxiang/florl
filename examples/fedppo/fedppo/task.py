@@ -1,15 +1,26 @@
 from collections.abc import Sequence
+from typing import TypedDict, Literal
 
 import torch.nn as nn
 from torch.distributions import OneHotCategorical
-from torchrl.envs import EnvBase, GymEnv
+from torchrl.envs import EnvBase, GymEnv, TransformedEnv, RewardSum
 from torchrl.data.tensor_specs import CategoricalBox
 from torchrl.modules import MLP, ProbabilisticActor, ValueOperator
 from tensordict.nn import TensorDictModule, InteractionType
 
 
-def make_env(env_name: str):
-    return GymEnv(env_name)
+class TaskConfig(TypedDict):
+    name: str
+    num_cells: Sequence[int] | int
+
+
+def make_env(name: str, mode: Literal["reference", "train"] = "train"):
+    env = GymEnv(name)
+    if mode == "train":
+        env = TransformedEnv(
+            env, RewardSum(in_keys=env.reward_keys, out_keys=["episode_reward"])
+        )
+    return env
 
 
 def make_ppo_modules(

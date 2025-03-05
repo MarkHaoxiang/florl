@@ -1,9 +1,15 @@
-"""fed-dqn: A Flower / PyTorch app."""
+from typing import TypedDict
 
 import numpy as np
 from flwr.common import Context, Metrics
-from flwr.server import ServerApp, ServerAppComponents, ServerConfig
+from flwr.server import ServerApp, ServerAppComponents, ServerConfig as FlwrServerConfig
 from flwr.server.strategy import FedAvg
+from florl.common.logging import JSONSerializable, metrics_aggregation_fn
+
+
+class ServerConfig(TypedDict):
+    num_rounds: int
+    fraction_fit: float
 
 
 def fit_metrics_aggregation_fn(metrics: list[tuple[int, Metrics]]):
@@ -18,28 +24,32 @@ def fit_metrics_aggregation_fn(metrics: list[tuple[int, Metrics]]):
     return res
 
 
-def evaluation_metrics_aggregation_fn(results: list[tuple[int, Metrics]]) -> Metrics:
-    return {}  # TODO
+@metrics_aggregation_fn
+def evaluation_metrics_aggregation_fn(
+    results: list[tuple[int, JSONSerializable]],
+):
     episode_reward = float(np.array([x[1]["episode_reward"] for x in results]).mean())
     metrics = {"episode_reward": episode_reward}
+
+    print(metrics)
     return metrics  # type: ignore
 
 
-def server_fn(context: Context):
-    num_rounds = 20
-    fraction_fit = 1.0
-
-    # Define strategy
+def server_fn(context: Context, num_rounds: int, fraction_fit: float):
     strategy = FedAvg(
         fraction_fit=fraction_fit,
         min_available_clients=2,
         fit_metrics_aggregation_fn=fit_metrics_aggregation_fn,
         evaluate_metrics_aggregation_fn=evaluation_metrics_aggregation_fn,
     )
-    config = ServerConfig(num_rounds=num_rounds)
+    config = FlwrServerConfig(num_rounds=num_rounds)
 
     return ServerAppComponents(strategy=strategy, config=config)
 
 
 # Create ServerApp
-app = ServerApp(server_fn=server_fn)
+def app(cfg: ServerConfig):
+    def _server_fn(context: Context):
+        return server_fn(context, cfg["num_rounds"], cfg["fraction_fit"])
+
+    return ServerApp(server_fn=_server_fn)

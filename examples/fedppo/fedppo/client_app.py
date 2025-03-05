@@ -3,7 +3,7 @@ from typing import TypedDict
 import torch
 from torch import nn
 from tensordict import TensorDict
-from torchrl.envs import EnvBase, TransformedEnv, RewardSum
+from torchrl.envs import EnvBase
 from torchrl.collectors import SyncDataCollector
 from torchrl.objectives.ppo import ClipPPOLoss
 from torchrl.objectives import ValueEstimators
@@ -14,7 +14,7 @@ from flwr.common import Context
 from florl.client import EnvironmentClient
 from florl.common import transpose_dicts
 
-from fedppo.task import make_env, make_ppo_modules
+from fedppo.task import TaskConfig, make_env, make_ppo_modules
 
 
 class PPOConfig(TypedDict, total=False):
@@ -47,9 +47,6 @@ class PPOClient(EnvironmentClient):
         normalize_advantage: bool = True,
         clip_epsilon: float = 0.2,
     ):
-        env = TransformedEnv(
-            env, RewardSum(in_keys=env.reward_keys, out_keys=["episode_reward"])
-        )
         super().__init__(env)
         self.actor = actor_network
         self.critic = value_network
@@ -72,7 +69,6 @@ class PPOClient(EnvironmentClient):
         self.loss.make_value_estimator(
             ValueEstimators.GAE, gamma=gae_gamma, lmbda=gae_lmbda
         )
-        self.loss.to(self.device)
 
         self.optim = torch.optim.Adam(self.loss.parameters(), lr=lr)
 
@@ -82,11 +78,15 @@ class PPOClient(EnvironmentClient):
             batch_size=self.minibatch_size,
         )
 
+        self._env.to(self.device)
+        self.actor.to(self.device)
+        self.loss.to(self.device)
+
     @property
     def parameter_container(self) -> nn.Module:
         return self.loss
 
-    def train(self, parameters, config, verbose: bool = False):
+    def train(self, parameters, config):
         self.loss.load_state_dict(parameters)
 
         collector = SyncDataCollector(
@@ -167,27 +167,28 @@ class PPOClient(EnvironmentClient):
 
         max_steps: int = config.get("max_steps", 500)
         rollout: TensorDict = self._env.rollout(
-            max_steps=max_steps,
-            policy=self.actor,
+            max_steps=max_steps, policy=self.actor, auto_cast_to_device=True
         )
         episode_reward = rollout.get(("next", "reward")).sum().item()
         return max_steps, {"episode_reward": episode_reward}
 
 
-def client_fn(context: Context, env_name: str, client_config: PPOConfig):
-    env = make_env(env_name)
-    actor, value = make_ppo_modules(env)
+def client_fn(context: Context, task_cfg: TaskConfig, client_cfg: PPOConfig):
+    reference_env = make_env(task_cfg["name"], mode="reference")
+    train_env = make_env(task_cfg["name"], mode="train")
+
+    actor, value = make_ppo_modules(reference_env)
 
     return PPOClient(
-        env=env, actor_network=actor, value_network=value, **client_config
+        env=train_env, actor_network=actor, value_network=value, **client_cfg
     ).to_numpy()
 
 
 # Flower ClientApp
 
 
-def app(cfg):
+def app(client_cfg: PPOConfig, task_cfg: TaskConfig):
     def _client_fn(context: Context):
-        return client_fn(context, env_name="CartPole-v1", client_config=cfg)
+        return client_fn(context, task_cfg=task_cfg, client_cfg=client_cfg)
 
     return ClientApp(client_fn=_client_fn)
