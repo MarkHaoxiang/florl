@@ -3,7 +3,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Self
 
-import flwr as fl
 from flwr.common import (
     Code,
     Config,
@@ -15,6 +14,7 @@ from flwr.common import (
     EvaluateRes,
     Status,
 )
+from flwr.client import Client as FlwrClient
 import torch.nn as nn
 from torchrl.envs import EnvBase
 
@@ -30,7 +30,7 @@ from florl.common import (
 from florl.common.res import evaluate_ok, fit_ok
 
 
-class FlorlClient(fl.client.Client, ABC):
+class Client(FlwrClient, ABC):
     """A client interface specific to reinforcement learning"""
 
     # =========
@@ -144,7 +144,7 @@ class FlorlClient(fl.client.Client, ABC):
         return _NumPyFlorlWrapper(client=self)
 
 
-class _NumPyFlorlWrapper[T: FlorlClient](fl.client.Client):
+class _NumPyFlorlWrapper[T: Client](FlwrClient):
     def __init__(self, client: T):
         super().__init__()
         self.client = client
@@ -172,7 +172,7 @@ class _NumPyFlorlWrapper[T: FlorlClient](fl.client.Client):
         return self.client.evaluate(ins)
 
 
-class EnvironmentClient(FlorlClient):
+class EnvironmentClient(Client):
     """A client with access to an RL client.
 
     Covers the majority of cases, possibly excluding offline reinforcement learning.

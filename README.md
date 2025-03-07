@@ -10,6 +10,28 @@ Currently, this project is in active development and not yet functional. However
 
 ## Installation
 
+## Abstractions
+
+`florl` provides an opinionated research pipeline for FRL.
+
+### Task
+
+A Task represents a challenging scenario in FRL, and generally contains the environment / dataset, associated constraints for the solution space, hyper-parameters etc.. A Task should contain a set of associated evaluations and visualisations. Technically, a Task is an interface with hooks for Algorithm.
+
+### Experiment
+
+An Experiment is instantiated from a task and an algorithm which hooks in the task. Experiment is the primary entry point for executing a research workflow, and manages the flwr server / flwr client / evaluation orchestration.
+
+### Algorithm
+
+An Algorithm is a dependency injection into Task, which contains components and logic to solve the Task. Algorithms can have additional associated metrics.
+
+### Benchmark
+
+A benchmark is a collection of experiments, which share the same Task. Benchmarks can be grouped.\
+
 ### Development
 
-We use [uv](https://github.com/astral-sh/uv) to manage local development environments.
+We use [uv](https://github.com/astral-sh/uv) to manage local development environments, and provide a set of .vscode settings.
+
+`uv sync --all-extras'
