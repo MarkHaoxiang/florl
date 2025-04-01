@@ -28,7 +28,7 @@ An Algorithm is a dependency injection into Task, which contains components and 
 
 ### Benchmark
 
-A benchmark is a collection of experiments, which share the same Task. Benchmarks can be grouped.\
+A benchmark is a collection of tasks, which can use the same algorithm.
 
 ### Development
 

@@ -12,22 +12,22 @@ from tensordict.nn import TensorDictModule
 from flwr.client import ClientApp
 from flwr.common import Context
 from florl.client import EnvironmentClient
-from florl.common import transpose_dicts
+from florl.common import Config, transpose_dicts
 
 from fedppo.task import TaskConfig, make_env, make_ppo_modules
 
 
-class PPOConfig(TypedDict, total=False):
-    minibatch_size: int
-    n_minibatches: int
-    n_update_epochs: int
-    n_iterations: int
-    gae_gamma: float
-    gae_lmbda: float
-    clip_grad_norm: float
-    lr: float
-    normalize_advantage: bool
-    clip_epsilon: float
+class PPOConfig(Config):
+    minibatch_size: int = 128
+    n_minibatches: int = 4
+    n_update_epochs: int = 4
+    n_iterations: int = 10
+    gae_gamma: float = 0.99
+    gae_lmbda: float = 0.95
+    clip_grad_norm: float = 1.0
+    lr: float = 2.5e-4
+    normalize_advantage: bool = True
+    clip_epsilon: float = 0.2
 
 
 class PPOClient(EnvironmentClient):
@@ -180,7 +180,10 @@ def client_fn(context: Context, task_cfg: TaskConfig, client_cfg: PPOConfig):
     actor, value = make_ppo_modules(reference_env)
 
     return PPOClient(
-        env=train_env, actor_network=actor, value_network=value, **client_cfg
+        env=train_env,
+        actor_network=actor,
+        value_network=value,
+        **client_cfg.model_dump(),
     ).to_numpy()
 
 

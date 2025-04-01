@@ -1,16 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Literal
 
-from pydantic import BaseModel
 from flwr.common import Context
 from flwr.simulation import run_simulation
 from flwr.client import Client, ClientApp
-from flwr.server import Server, ServerApp
+from flwr.server import ServerAppComponents, ServerApp
 from torchrl.envs import EnvBase
 
+from florl.common import Config
 from florl.client import EnvironmentClient
-
-Config = BaseModel
 
 
 class Experiment[C: Config](ABC):
@@ -42,17 +40,23 @@ class SimulationExperiment[C: SimulationConfig](Experiment[C]):
         )
 
 
-class Algorithm[C: Config](ABC):
+class Algorithm(ABC):
     pass
 
 
-class Task[A: Algorithm, C: Config](ABC):
+class Task[A: Algorithm](ABC):
     @abstractmethod
     def compile(self, algorithm: A) -> Experiment:
         raise NotImplementedError()
 
 
-class OnlineAlgorithm[C: Config](Algorithm[C]):
+class Benchmark[A: Algorithm](Task[Algorithm]):
+    def __init__(self, tasks: list[Task[A]]):
+        super().__init__()
+        self.tasks = tasks
+
+
+class OnlineAlgorithm(Algorithm):
     @abstractmethod
     def make_client(
         self, train_env: EnvBase, eval_env: EnvBase, reference_env: EnvBase
@@ -60,11 +64,11 @@ class OnlineAlgorithm[C: Config](Algorithm[C]):
         raise NotImplementedError()
 
     @abstractmethod
-    def make_server(self) -> Server:
+    def make_server(self) -> ServerAppComponents:
         raise NotImplementedError()
 
 
-class OnlineTask[C: Config](Task[OnlineAlgorithm, C]):
+class OnlineTask(Task[OnlineAlgorithm]):
     @abstractmethod
     def create_env(self, mode: Literal["train", "evaluate", "reference"]) -> EnvBase:
         raise NotImplementedError()
@@ -81,4 +85,13 @@ class OnlineTask[C: Config](Task[OnlineAlgorithm, C]):
             return client.to_numpy()
 
         client_app = ClientApp(client_fn=client_fn)
-        raise NotImplementedError()
+
+        def server_fn(context: Context) -> ServerAppComponents:
+            return algorithm.make_server()
+
+        server_app = ServerApp(server_fn=server_fn)
+
+        return SimulationExperiment(
+            client_app=client_app,
+            server_app=server_app,
+        )

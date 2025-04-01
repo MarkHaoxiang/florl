@@ -10,6 +10,7 @@ from florl.common.parameter import (
 )
 
 from florl.common.logging import JSONSerializable, Metrics, transpose_dicts
+from florl.common.config import Config
 
 __all__ = [
     "StateDict",
@@ -23,4 +24,5 @@ __all__ = [
     "JSONSerializable",
     "Metrics",
     "transpose_dicts",
+    "Config",
 ]

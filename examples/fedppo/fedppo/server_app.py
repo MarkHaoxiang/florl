@@ -1,13 +1,12 @@
-from typing import TypedDict
-
 import numpy as np
 from flwr.common import Context, Metrics
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig as FlwrServerConfig
 from flwr.server.strategy import FedAvg
+from florl.common import Config
 from florl.common.logging import JSONSerializable, metrics_aggregation_fn
 
 
-class ServerConfig(TypedDict):
+class ServerConfig(Config):
     num_rounds: int
     fraction_fit: float
 
@@ -50,6 +49,6 @@ def server_fn(context: Context, num_rounds: int, fraction_fit: float):
 # Create ServerApp
 def app(cfg: ServerConfig):
     def _server_fn(context: Context):
-        return server_fn(context, cfg["num_rounds"], cfg["fraction_fit"])
+        return server_fn(context, cfg.num_rounds, cfg.fraction_fit)
 
     return ServerApp(server_fn=_server_fn)

@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import TypedDict, Literal
+from typing import Literal
 
 import torch.nn as nn
 from torch.distributions import OneHotCategorical
@@ -7,9 +7,10 @@ from torchrl.envs import EnvBase, GymEnv, TransformedEnv, RewardSum
 from torchrl.data.tensor_specs import CategoricalBox
 from torchrl.modules import MLP, ProbabilisticActor, ValueOperator
 from tensordict.nn import TensorDictModule, InteractionType
+from florl.common import Config
 
 
-class TaskConfig(TypedDict):
+class TaskConfig(Config):
     name: str
     num_cells: Sequence[int] | int
 

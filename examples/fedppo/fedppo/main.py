@@ -1,7 +1,8 @@
 import os
-from typing import TypedDict
 
 from flwr.simulation import run_simulation
+from florl.common import Config
+from omegaconf import DictConfig
 import hydra
 
 from fedppo.task import TaskConfig
@@ -13,11 +14,11 @@ from fedppo import client_app, server_app
 CONFIG_DIR = os.path.join(os.path.dirname(__file__), "../fedppo/conf")
 
 
-class SimulationConfig(TypedDict):
+class SimulationConfig(Config):
     num_supernodes: int
 
 
-class FedPPOConfig(TypedDict):
+class FedPPOConfig(Config):
     client: PPOConfig
     server: ServerConfig
     task: TaskConfig
@@ -25,11 +26,12 @@ class FedPPOConfig(TypedDict):
 
 
 @hydra.main(config_path="conf", config_name="cartpole", version_base=None)
-def main(cfg: FedPPOConfig):
+def main(cfg_raw: DictConfig):
+    cfg = FedPPOConfig.from_dict(cfg_raw)
     run_simulation(
-        server_app=server_app.app(cfg["server"]),
-        client_app=client_app.app(cfg["client"], cfg["task"]),
-        num_supernodes=cfg["simulation"]["num_supernodes"],
+        server_app=server_app.app(cfg.server),
+        client_app=client_app.app(cfg.client, cfg.task),
+        num_supernodes=cfg.simulation.num_supernodes,
         backend_name="ray",
     )
 
