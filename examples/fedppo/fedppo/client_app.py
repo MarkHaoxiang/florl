@@ -1,5 +1,3 @@
-from typing import TypedDict
-
 import torch
 from torch import nn
 from tensordict import TensorDict
@@ -11,7 +9,7 @@ from torchrl.data import ReplayBuffer, LazyTensorStorage, SamplerWithoutReplacem
 from tensordict.nn import TensorDictModule
 from flwr.client import ClientApp
 from flwr.common import Context
-from florl.client import EnvironmentClient
+from florl.client.client import EnvironmentClient
 from florl.common import Config, transpose_dicts
 
 from fedppo.task import TaskConfig, make_env, make_ppo_modules
