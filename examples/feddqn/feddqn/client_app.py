@@ -140,7 +140,6 @@ class DQNClient(EnvironmentClient, StatefulClient):
             # Compute loss
             self.optim.zero_grad()
             loss_vals = self.loss(minibatch)
-            print(loss_vals)
             loss_vals["loss"].backward()
             torch.nn.utils.clip_grad_norm_(
                 self.loss.parameters(), max_norm=self.clip_grad_norm

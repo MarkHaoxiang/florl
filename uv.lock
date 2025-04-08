@@ -8,6 +8,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "feddqn",
     "fedppo",
     "florl",
 ]
@@ -332,6 +333,17 @@ wheels = [
 ]
 
 [[package]]
+name = "feddqn"
+version = "0.1.0"
+source = { editable = "examples/feddqn" }
+dependencies = [
+    { name = "florl" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "florl", editable = "." }]
+
+[[package]]
 name = "fedppo"
 version = "0.1.0"
 source = { editable = "examples/fedppo" }
@@ -376,6 +388,7 @@ epicare = [
     { name = "gym" },
 ]
 examples = [
+    { name = "feddqn" },
     { name = "fedppo" },
     { name = "gymnasium" },
     { name = "wandb" },
@@ -400,6 +413,7 @@ dev = [
 requires-dist = [
     { name = "epicare", marker = "extra == 'epicare'", git = "https://github.com/Grosenick-Lab-Cornell/EpiCare.git" },
     { name = "expecttest", specifier = ">=0.3.0" },
+    { name = "feddqn", marker = "extra == 'examples'", editable = "examples/feddqn" },
     { name = "fedppo", marker = "extra == 'examples'", editable = "examples/fedppo" },
     { name = "flwr", specifier = ">=1.17.0" },
     { name = "gym", marker = "extra == 'epicare'", specifier = ">=0.23.1" },

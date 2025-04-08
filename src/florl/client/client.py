@@ -179,5 +179,5 @@ class EnvironmentClient(Client):
     """
 
     def __init__(self, env: EnvBase):
-        super().__init__()
+        Client.__init__(self)
         self._env = env

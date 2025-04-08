@@ -6,7 +6,7 @@ task:
 client:
   minibatch_size: 128
   buffer_size: 10000
-  n_iterations: 1000
+  n_iterations: 100
   gamma: 0.99
   lr: 2.5e-4
   clip_grad_norm: 1.0

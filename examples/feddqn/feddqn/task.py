@@ -38,7 +38,7 @@ def make_dqn_module(
 
     value_model = MLP(
         in_features=env.observation_spec["observation"].shape[0],
-        out_features=1,
+        out_features=env.action_specs.shape[0],
         num_cells=num_cells,
         activation_class=activation_class,
     )
@@ -50,7 +50,7 @@ def make_dqn_module(
     return actor
 
 
-def make_dqn_loss_modules(actor, gamma):
+def make_dqn_loss_modules(actor, gamma: float):
     loss_module = DQNLoss(actor, delay_value=True)
     loss_module.make_value_estimator(gamma=gamma)
     target_updater = SoftUpdate(loss_module, eps=0.995)
