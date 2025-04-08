@@ -1,0 +1,203 @@
+[2025-04-08 15:41:44,957][flwr][DEBUG] - Pre-registering run with id 6341867049226415869
+[2025-04-08 15:41:44,957][flwr][DEBUG] - Using InMemoryState
+[2025-04-08 15:41:44,957][flwr][DEBUG] - Using InMemoryState
+[2025-04-08 15:41:44,958][flwr][WARNING] - 
+Setting `min_available_clients` lower than `min_fit_clients` or
+`min_evaluate_clients` can cause the server to fail when there are too few clients
+connected to the server. `min_available_clients` must be set to a value larger
+than or equal to the values of `min_fit_clients` and `min_evaluate_clients`.
+
+[2025-04-08 15:41:44,958][flwr][INFO] - Starting Flower ServerApp, config: num_rounds=20, no round_timeout
+[2025-04-08 15:41:44,958][flwr][INFO] - 
+[2025-04-08 15:41:44,958][flwr][DEBUG] - Using InMemoryState
+[2025-04-08 15:41:44,959][flwr][DEBUG] - Registered 10 nodes
+[2025-04-08 15:41:44,959][flwr][DEBUG] - Supported backends: ['ray']
+[2025-04-08 15:41:44,959][flwr][DEBUG] - Initialising: RayBackend
+[2025-04-08 15:41:44,959][flwr][DEBUG] - Backend config: {'init_args': {'logging_level': 30, 'log_to_driver': True}, 'client_resources': {'num_cpus': 2, 'num_gpus': 0}, 'actor': {'tensorflow': 0}}
+[2025-04-08 15:41:44,959][flwr][INFO] - [INIT]
+[2025-04-08 15:41:44,960][flwr][INFO] - Requesting initial parameters from one random client
+[2025-04-08 15:41:47,170][flwr][DEBUG] - Constructed ActorPool with: 8 actors
+[2025-04-08 15:41:47,170][flwr][DEBUG] - Using InMemoryState
+[2025-04-08 15:41:49,805][flwr][ERROR] - An exception was raised when processing a message by RayBackend
+[2025-04-08 15:41:49,805][flwr][ERROR] - [36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 144, in __call__
+    return self._call(message, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 128, in ffn
+    out_message = handle_legacy_message_from_msgtype(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/message_handler/message_handler.py", line 96, in handle_legacy_message_from_msgtype
+    client = client_fn(context)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 216, in _client_fn
+    return client_fn(context, task_cfg=task_cfg, client_cfg=client_cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 192, in client_fn
+    client = DQNClient(
+             ^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 51, in __init__
+    EnvironmentClient.__init__(self, env)
+  File "/home/xavier/Projects/florl/src/florl/client/client.py", line 188, in __init__
+    super().__init__()
+TypeError: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id'
+
+The above exception was the direct cause of the following exception:
+
+[36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 64, in run
+    raise ClientAppException(str(ex)) from ex
+flwr.client.client_app.ClientAppException: 
+Exception ClientAppException occurred. Message: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id'
+[2025-04-08 15:41:49,806][flwr][ERROR] - Traceback (most recent call last):
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/superlink/fleet/vce/vce_api.py", line 111, in worker
+    out_mssg, updated_context = backend.process_message(message, context)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/superlink/fleet/vce/backend/raybackend.py", line 187, in process_message
+    raise ex
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/superlink/fleet/vce/backend/raybackend.py", line 175, in process_message
+    ) = self.pool.fetch_result_and_return_actor_to_pool(future)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 480, in fetch_result_and_return_actor_to_pool
+    _, out_mssg, updated_context = ray.get(future)
+                                   ^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/ray/_private/auto_init_hook.py", line 21, in auto_init_wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/ray/_private/client_mode_hook.py", line 103, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/ray/_private/worker.py", line 2772, in get
+    values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/ray/_private/worker.py", line 919, in get_objects
+    raise value.as_instanceof_cause()
+ray.exceptions.RayTaskError(ClientAppException): [36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 144, in __call__
+    return self._call(message, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 128, in ffn
+    out_message = handle_legacy_message_from_msgtype(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/message_handler/message_handler.py", line 96, in handle_legacy_message_from_msgtype
+    client = client_fn(context)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 216, in _client_fn
+    return client_fn(context, task_cfg=task_cfg, client_cfg=client_cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 192, in client_fn
+    client = DQNClient(
+             ^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 51, in __init__
+    EnvironmentClient.__init__(self, env)
+  File "/home/xavier/Projects/florl/src/florl/client/client.py", line 188, in __init__
+    super().__init__()
+TypeError: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id'
+
+The above exception was the direct cause of the following exception:
+
+[36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 64, in run
+    raise ClientAppException(str(ex)) from ex
+flwr.client.client_app.ClientAppException: 
+Exception ClientAppException occurred. Message: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id'
+
+[2025-04-08 15:41:49,865][flwr][ERROR] - ServerApp thread raised an exception: Message contains an Error (reason: <class 'ray.exceptions.RayTaskError(ClientAppException)'>:<'[36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 144, in __call__
+    return self._call(message, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 128, in ffn
+    out_message = handle_legacy_message_from_msgtype(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/message_handler/message_handler.py", line 96, in handle_legacy_message_from_msgtype
+    client = client_fn(context)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 216, in _client_fn
+    return client_fn(context, task_cfg=task_cfg, client_cfg=client_cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 192, in client_fn
+    client = DQNClient(
+             ^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 51, in __init__
+    EnvironmentClient.__init__(self, env)
+  File "/home/xavier/Projects/florl/src/florl/client/client.py", line 188, in __init__
+    super().__init__()
+TypeError: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id'
+
+The above exception was the direct cause of the following exception:
+
+[36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 64, in run
+    raise ClientAppException(str(ex)) from ex
+flwr.client.client_app.ClientAppException: 
+Exception ClientAppException occurred. Message: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id''>). It originated during client-side execution of a message.
+[2025-04-08 15:41:49,866][flwr][ERROR] - Traceback (most recent call last):
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/simulation/run_simulation.py", line 268, in server_th_with_start_checks
+    updated_context = _run(
+                      ^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/run_serverapp.py", line 62, in run
+    server_app(grid=grid, context=context)
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/server_app.py", line 142, in __call__
+    start_grid(
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/compat/app.py", line 90, in start_grid
+    hist = run_fl(
+           ^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/server.py", line 492, in run_fl
+    hist, elapsed_time = server.fit(
+                         ^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/server.py", line 93, in fit
+    self.parameters = self._get_initial_parameters(server_round=0, timeout=timeout)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/server.py", line 284, in _get_initial_parameters
+    get_parameters_res = random_client.get_parameters(
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/compat/grid_client_proxy.py", line 63, in get_parameters
+    in_recorddict = self._send_receive_recorddict(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/server/compat/grid_client_proxy.py", line 131, in _send_receive_recorddict
+    raise ValueError(
+ValueError: Message contains an Error (reason: <class 'ray.exceptions.RayTaskError(ClientAppException)'>:<'[36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 144, in __call__
+    return self._call(message, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/client_app.py", line 128, in ffn
+    out_message = handle_legacy_message_from_msgtype(
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/client/message_handler/message_handler.py", line 96, in handle_legacy_message_from_msgtype
+    client = client_fn(context)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 216, in _client_fn
+    return client_fn(context, task_cfg=task_cfg, client_cfg=client_cfg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 192, in client_fn
+    client = DQNClient(
+             ^^^^^^^^^^
+  File "/home/xavier/Projects/florl/examples/feddqn/feddqn/client_app.py", line 51, in __init__
+    EnvironmentClient.__init__(self, env)
+  File "/home/xavier/Projects/florl/src/florl/client/client.py", line 188, in __init__
+    super().__init__()
+TypeError: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id'
+
+The above exception was the direct cause of the following exception:
+
+[36mray::ClientAppActor.run()[39m (pid=80517, ip=128.232.99.152, actor_id=09b07d32d763f94a67d6ce1701000000, repr=<flwr.simulation.ray_transport.ray_actor.ClientAppActor object at 0x7fc792941430>)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/xavier/Projects/florl/.venv/lib/python3.12/site-packages/flwr/simulation/ray_transport/ray_actor.py", line 64, in run
+    raise ClientAppException(str(ex)) from ex
+flwr.client.client_app.ClientAppException: 
+Exception ClientAppException occurred. Message: StatefulClient.__init__() missing 2 required positional arguments: 'root_dir' and 'node_id''>). It originated during client-side execution of a message.
+
+[2025-04-08 15:41:49,867][flwr][DEBUG] - ServerApp finished running.
+[2025-04-08 15:41:49,867][flwr][DEBUG] - Triggered stop event for Simulation Engine.
+[2025-04-08 15:41:50,808][flwr][DEBUG] - Terminated 8 actors
+[2025-04-08 15:41:52,366][flwr][DEBUG] - Terminated RayBackend
