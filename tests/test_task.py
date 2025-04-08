@@ -1,7 +1,11 @@
 import warnings
+import torch
 import torch.nn as nn
+from torchrl.data.replay_buffers import ReplayBuffer, ListStorage
+
 from florl.client import EnvironmentClient
 from florl.task import OnlineAlgorithm
+from florl.task.offline import RandomPartitionSamplerWithoutReplacement
 
 
 class EmptyModule(nn.Module):
@@ -27,12 +31,12 @@ class PlaceholderClient(EnvironmentClient):
 def test_classical_control():
     # Skip if gymnasium is not available
     try:
-        import gymnasium
+        import gymnasium  # noqa: F401
     except ImportError:
         warnings.warn("gymnasium is not available. Skipping test.")
         return
 
-    from florl.task.gymnasium import (
+    from florl.task.libs.gymnasium import (
         ClassicalControlDiscrete,
         ClassicalControlContinuous,
     )
@@ -50,3 +54,27 @@ def test_classical_control():
     for task in ClassicalControlDiscrete.tasks + ClassicalControlContinuous.tasks:
         algorithm = PlaceholderAlgorithm()
         _ = task.compile(algorithm)
+
+
+def test_partition_sampler():
+    partition = torch.arange(0, 10, 2)
+    rb = ReplayBuffer(
+        storage=ListStorage(max_size=1000),
+        sampler=RandomPartitionSamplerWithoutReplacement(partition=partition),
+        batch_size=5,
+    )
+    rb.extend(torch.arange(100).reshape(-1, 1))
+
+    # Test sampling from the partition (should be a subset of the partition)
+    samples = rb.sample()
+    assert all(idx in partition for idx in samples), (
+        "Sampled indices are not in the partition"
+    )
+
+    # Test empty partition (should raise an error)
+    try:
+        rb.sampler._partition = torch.tensor([])
+        rb.sample()
+        assert False, "Empty partition should raise an error"
+    except ValueError:
+        pass

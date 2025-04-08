@@ -16,11 +16,12 @@ dependencies = [
     "pydantic>=2.10.6",
     "ray>=2.42.0",
     "torch>=2.6.0",
-    "torchrl[gym_continuous]>=0.7.0",
+    "torchrl>=0.7.0",
 ]
-
 [project.optional-dependencies]
-examples = ["fedppo"]
+examples = ["wandb>=0.19.6", "gymnasium>=0.26.0,<1.0", "fedppo"]
+epicare = ["gym>=0.23.1", "epicare"]
+gymnasium-robotics = ["gymnasium-robotics>=1.2.0,<1.3"]
 
 [build-system]
 requires = ["hatchling"]
@@ -45,4 +46,5 @@ members = [".", "examples/*"]
 [tool.uv.sources]
 florl = { workspace = true }
 fedppo = { workspace = true }
+epicare = { git = "https://github.com/Grosenick-Lab-Cornell/EpiCare.git"}
 
