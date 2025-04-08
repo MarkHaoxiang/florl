@@ -27,7 +27,7 @@ class FedPPOConfig(Config):
 
 @hydra.main(config_path="conf", config_name="cartpole", version_base=None)
 def main(cfg_raw: DictConfig):
-    cfg = FedPPOConfig.from_dict(cfg_raw)
+    cfg = FedPPOConfig.from_raw(cfg_raw)
     run_simulation(
         server_app=server_app.app(cfg.server),
         client_app=client_app.app(cfg.client, cfg.task),

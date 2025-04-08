@@ -20,7 +20,7 @@ def get_config_files():
 @pytest.fixture(scope="module", params=get_config_files())
 def config(request) -> FedPPOConfig:
     with open(request.param, "r") as f:
-        return OmegaConf.to_object(OmegaConf.load(f))  # type: ignore
+        return FedPPOConfig.from_raw(OmegaConf.load(f))  # type: ignore
 
 
 @pytest.fixture
@@ -29,11 +29,11 @@ def context():
 
 
 def test_create_client(config, context):
-    client_fn(context, config["task"], config["client"])
+    client_fn(context, config.task, config.client)
 
 
 def test_evaluate(config, context):
-    client = client_fn(context, config["task"], config["client"]).client
+    client = client_fn(context, config.task, config.client).client
     evaluate_res = client.evaluate(
         EvaluateIns(
             parameters=client.get_parameters(GetParametersIns({})).parameters,

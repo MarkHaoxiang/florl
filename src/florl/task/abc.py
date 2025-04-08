@@ -47,10 +47,22 @@ class Algorithm(ABC):
 class Task[A: Algorithm](ABC):
     @abstractmethod
     def compile(self, algorithm: A) -> Experiment:
+        """
+        Compiles the task using the provided algorithm and returns an Experiment instance.
+
+        Args:
+            algorithm (A): The algorithm instance that specifies how to compile the task.
+
+        Returns:
+            Experiment: A simulation experiment instance configured with client and server apps.
+
+        Raises:
+            NotImplementedError: If the method is not implemented by the subclass.
+        """
         raise NotImplementedError()
 
 
-class Benchmark[A: Algorithm](Task[Algorithm]):
+class Benchmark[A: Algorithm]:
     def __init__(self, tasks: list[Task[A]]):
         super().__init__()
         self.tasks = tasks

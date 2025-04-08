@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 class Config(BaseModel):
     @classmethod
-    def from_dict(cls, config: MutableMapping):
+    def from_raw(cls, config: MutableMapping):
         """
         Convert a dictionary to a Config object.
         """

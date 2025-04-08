@@ -27,7 +27,7 @@ def fit_metrics_aggregation_fn(metrics: list[tuple[int, Metrics]]):
 def evaluation_metrics_aggregation_fn(
     results: list[tuple[int, JSONSerializable]],
 ):
-    episode_reward = float(np.array([x[1]["episode_reward"] for x in results]).mean())
+    episode_reward = float(np.array([x[1]["episode_reward"] for x in results]).mean()) # type: ignore
     metrics = {"episode_reward": episode_reward}
 
     print(metrics)

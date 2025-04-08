@@ -1,5 +1,6 @@
 task:
   name: "CartPole-v1"
+  num_cells: [80, 120]
 client:
   minibatch_size: 128
   n_minibatches: 4

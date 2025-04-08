@@ -174,8 +174,8 @@ class PPOClient(EnvironmentClient):
 
 
 def client_fn(context: Context, task_cfg: TaskConfig, client_cfg: PPOConfig):
-    reference_env = make_env(task_cfg["name"], mode="reference")
-    train_env = make_env(task_cfg["name"], mode="train")
+    reference_env = make_env(task_cfg.name, mode="reference")
+    train_env = make_env(task_cfg.name, mode="train")
 
     actor, value = make_ppo_modules(reference_env)
 
