@@ -4,9 +4,9 @@ from florl.task.abc import (
     SimulationExperiment,
     Task,
     Algorithm,
-    OnlineAlgorithm,
-    OnlineTask,
 )
+from florl.task.online import OnlineAlgorithm, OnlineTask
+from florl.task.offline import OfflineAlgorithm, OfflineTask
 
 __all__ = [
     "Experiment",
@@ -16,4 +16,6 @@ __all__ = [
     "Algorithm",
     "OnlineAlgorithm",
     "OnlineTask",
+    "OfflineAlgorithm",
+    "OfflineTask",
 ]
